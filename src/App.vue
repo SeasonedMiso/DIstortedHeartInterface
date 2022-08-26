@@ -62,7 +62,11 @@ export default {
 <template >
   <!-- <link href="../dist/output.css" rel="stylesheet"> -->
   <div class="container" style="position: relative; max-height:100vh;">
-    <h1>Preset {{ activePreset + 1 }}</h1>
+    <!-- <div class="flex-container"> -->
+      <!-- <button @click="decrementActivePreset()" style="   width: 10%;">◀︎</button> -->
+      <h1>Preset {{ activePreset + 1 }}</h1>
+      <!-- <button @click="incrementActivePreset()" style=" width: 10%;">▶︎</button> -->
+    <!-- </div> -->
     <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
     <div style=" margin: 0 auto; width: 80%;">
       LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}

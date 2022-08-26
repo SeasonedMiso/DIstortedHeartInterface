@@ -1,5 +1,5 @@
 byte freq;
-String inByte;
+String inString;
 
 void setup() {
   // start serial port at 9600 bps:
@@ -8,30 +8,29 @@ void setup() {
     ;
   }
   pinMode(LED_BUILTIN, OUTPUT);
-  // establishContact();  // send a byte to establish contact until receiver responds
-  Serial.println("setup completed\n");
-  delay(300);
+  // Serial.println("test\n");
+  // Serial.write("test\n");
+  freq = 15;
 }
 
 void loop() {
-  // if we get a valid byte, read analog ins:
-  // Serial.println("Enter your name.");  
   while(Serial.available() == 0){
-      inByte = Serial.read();
-      Serial.println(inByte);
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(500/freq);                       // wait for a second
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(500/freq);                       // wait for a second
   }
-  while (Serial.available() == 0) {}  
-  // if (Serial.available() > 0) {
-  //   // get incoming byte:
-  //   Serial.println("Getting byte...");
-  //   delay(300);
-  //   inByte = Serial.read();
-  // }
-  // digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-  // delay(500/freq);                       // wait for a second
-  // digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  // delay(500/freq);                       // wait for a second
-}
+    while(Serial.available() > 0){
+      inString = Serial.readString();
+      Serial.println(inString);
+      Serial.write("sent message\n");
+      if(inString.toInt()>0&&inString.toInt()<20){
+        freq = inString.toInt();
+      }
+    }
+    
+} 
+
 
 void establishContact() {
   while (Serial.available() <= 0) {
