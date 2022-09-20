@@ -24,15 +24,6 @@ export default {
     incrementActivePreset() {
       this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
     },
-    // async savePreset() {
-    //   outputString = "";
-    //   outputString += this.activePreset;
-    //   outputString += lpf;
-    //   outputString += hpf;
-    //   outputString += gateThreshold;
-    //   outputString += odGain;
-    //   outputString += volume;
-    // },
     presetString(activePreset) {
       let stringOutput = ""
       let currentPreset = this.presets[this.activePreset];
