@@ -2,6 +2,8 @@
 import { reactive, toRefs } from 'vue'
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/antd.css'
+import { invoke } from '@tauri-apps/api/tauri'
+// const invoke = window.__TAURI__.invoke
 export default {
   name: "App",
   components: {
@@ -21,6 +23,30 @@ export default {
     },
     incrementActivePreset() {
       this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
+    },
+    // async savePreset() {
+    //   outputString = "";
+    //   outputString += this.activePreset;
+    //   outputString += lpf;
+    //   outputString += hpf;
+    //   outputString += gateThreshold;
+    //   outputString += odGain;
+    //   outputString += volume;
+    // },
+    presetString(activePreset) {
+      let stringOutput = ""
+      let currentPreset = this.presets[this.activePreset];
+      stringOutput += currentPreset.lpf + " ";
+      stringOutput += currentPreset.hpf + " ";
+      stringOutput += currentPreset.gateThreshold + " ";
+      stringOutput += currentPreset.compThreshold + " ";
+      stringOutput += currentPreset.odGain + " ";
+      stringOutput += currentPreset.volume;
+      return stringOutput
+    },
+    savePreset() {
+      let saveInfo = (this.activePreset + 1).toString() + ":" + this.presetString(this.activePreset);
+      invoke('save_preset', { saveInfo: saveInfo })
     }
   },
   data() {
@@ -63,9 +89,9 @@ export default {
   <!-- <link href="../dist/output.css" rel="stylesheet"> -->
   <div class="container" style="position: relative; max-height:100vh;">
     <!-- <div class="flex-container"> -->
-      <!-- <button @click="decrementActivePreset()" style="   width: 10%;">◀︎</button> -->
-      <h1>Preset {{ activePreset + 1 }}</h1>
-      <!-- <button @click="incrementActivePreset()" style=" width: 10%;">▶︎</button> -->
+    <!-- <button @click="decrementActivePreset()" style="   width: 10%;">◀︎</button> -->
+    <h1>Preset {{ activePreset + 1 }}</h1>
+    <!-- <button @click="incrementActivePreset()" style=" width: 10%;">▶︎</button> -->
     <!-- </div> -->
     <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
     <div style=" margin: 0 auto; width: 80%;">
@@ -84,7 +110,8 @@ export default {
 
     </div>
     <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
-    <button @click="test" class="text-3xl font-bold underline" style=" width: 80%; margin: 0 auto; margin-top:">Save
+    <button @click="savePreset()" class="text-3xl font-bold underline" style=" width: 80%; margin: 0 auto; margin-top:">
+      Save
       Preset</button>
 
   </div>

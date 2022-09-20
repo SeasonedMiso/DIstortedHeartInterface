@@ -5,6 +5,7 @@
 
 use serde::de::value::Error;
 use serialport::SerialPortType::UsbPort;
+use std::net::TcpListener;
 use std::{thread::sleep, time::Duration};
 
 #[tauri::command]
@@ -15,10 +16,18 @@ fn greet(name: &str) -> () {
 fn main() {
     find_arduino();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        // This is where you pass in your commands
+        .invoke_handler(tauri::generate_handler![save_preset])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("failed to run app");
 }
+
+#[tauri::command]
+// this.activePreset ,this.presets
+fn save_preset(save_info: String) {
+    println!("I was invoked from JS, with this message: {}", save_info);
+}
+
 fn find_arduino() {
     let mut arduino_port_name: String;
     arduino_port_name = "".to_string();
@@ -55,7 +64,7 @@ fn find_arduino() {
         // port.write(output).expect("Write failed!");
         output = "2\n".as_bytes();
         port.write(output).expect("Write failed!");
-        port.flush().unwrap();
+        // port.flush().unwrap();
 
         // let mut serial_buf: Vec<u8> = vec![0; 32];
         // loop {
