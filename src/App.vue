@@ -17,13 +17,15 @@ export default {
     decrementActivePreset() {
       this.activePreset = (this.activePreset > 0) ? this.activePreset - 1 : 2;
       this.saveBool = true;
-      // invoke('change_preset', { presetNo: this.activePreset })
+      invoke('change_preset', { presetNo: (this.activePreset + 1).toString() })
+      //fetch params from arduino
     },
     incrementActivePreset() {
       console.log("abc");
       this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
       this.saveBool = true;
-      // invoke('change_preset', { presetNo: this.activePreset })
+      invoke('change_preset', { presetNo: (this.activePreset + 1).toString() })
+      //fetch params from arduino
     },
     presetString(activePreset) {
       let stringOutput = ""
@@ -88,7 +90,8 @@ export default {
 
 <template >
   <!-- <link href="../dist/output.css" rel="stylesheet"> -->
-  <div :class="{ pre3 : activePreset==2, pre2 : activePreset==1, pre1 : activePreset ==0}">
+  <div :class="{ pre3 : activePreset==2, pre2 : activePreset==1, pre1 : activePreset ==0}"
+    style="position: fixed, width: 100vw; height: 100vh">
     <div class="container" style="position: relative; max-height:100vh;">
       <h1>Preset {{ activePreset + 1 }}</h1>
       <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
@@ -147,5 +150,11 @@ export default {
 
 .pre1 {
   background-color: rgb(44, 98, 44);
+}
+
+html,
+body {
+  margin: 0px !important;
+  padding: 0px !important;
 }
 </style>

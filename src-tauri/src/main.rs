@@ -23,6 +23,7 @@ fn main() {
     tauri::Builder::default()
         // This is where you pass in your commands
         .invoke_handler(tauri::generate_handler![save_preset])
+        .invoke_handler(tauri::generate_handler![change_preset])
         .run(tauri::generate_context!())
         .expect("failed to run app");
 }
@@ -39,13 +40,14 @@ fn save_preset(save_info: String) {
         }
     }
 }
+
 #[tauri::command]
 fn change_preset(preset_no: String) {
-    println!("I was invoked from JS, with this message: {}", preset_no);
+    println!("Preset changed to: {}", preset_no);
     sleep(Duration::new(1, 0));
-    let mut tempString = "p".to_string();
-    tempString.push_str(&preset_no);
-    let mut output = tempString.as_bytes();
+    let mut temp_string = "p".to_string();
+    temp_string.push_str(&preset_no);
+    let mut output = temp_string.as_bytes();
     output = "2\n".as_bytes();
     unsafe {
         if let Some(port) = &global_port {
