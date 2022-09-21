@@ -14,17 +14,15 @@ export default {
     return toRefs(sliderData)
   },
   methods: {
-    // test() {
-    //   window.ipcRenderer.send("arduinoTest", "arg here") // or any other ipcRenderer method you want to invoke
-    //   console.log(window.ipcRenderer)
-    // }
     decrementActivePreset() {
       this.activePreset = (this.activePreset > 0) ? this.activePreset - 1 : 2;
+      this.saveBool = true;
       // invoke('change_preset', { presetNo: this.activePreset })
     },
     incrementActivePreset() {
       console.log("abc");
       this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
+      this.saveBool = true;
       // invoke('change_preset', { presetNo: this.activePreset })
     },
     presetString(activePreset) {
@@ -41,6 +39,7 @@ export default {
     updatePreset() {
       let saveInfo = "u" + (this.activePreset + 1).toString() + ":" + this.presetString(this.activePreset);
       invoke('save_preset', { saveInfo: saveInfo })
+      this.saveBool = true;
     },
     savePreset() {
       let saveInfo = "s" + (this.activePreset + 1).toString();
@@ -49,6 +48,7 @@ export default {
   },
   data() {
     return {
+      saveBool: true,
       activePreset: 0,
       customColor: {
         backgroundColor: "Red"
@@ -90,38 +90,32 @@ export default {
   <!-- <link href="../dist/output.css" rel="stylesheet"> -->
   <div :class="{ pre3 : activePreset==2, pre2 : activePreset==1, pre1 : activePreset ==0}">
     <div class="container" style="position: relative; max-height:100vh;">
-      <!-- <div class="flex-container"> -->
-      <!-- <button @click="decrementActivePreset()" style="   width: 10%;">◀︎</button> -->
       <h1>Preset {{ activePreset + 1 }}</h1>
-      <!-- <button @click="incrementActivePreset()" style=" width: 10%;">▶︎</button> -->
-      <!-- </div> -->
       <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
       <div style=" margin: 0 auto; width: 80%;">
         LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
-        <vue-slider ref=" slider" v-model="presets[activePreset].lpf" />
+        <vue-slider ref=" slider" v-model="presets[activePreset].lpf" v-on:change="saveBool = false" />
         HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
-        <vue-slider ref="slider" v-model="presets[activePreset].hpf" />
+        <vue-slider ref="slider" v-model="presets[activePreset].hpf" v-on:change="saveBool = false" />
         gateThreshold:{{ presets[activePreset].gateThreshold }}
-        <vue-slider ref="slider" v-model="presets[activePreset].gateThreshold" />
+        <vue-slider ref="slider" v-model="presets[activePreset].gateThreshold" v-on:change="saveBool = false" />
         compThreshold:{{ presets[activePreset].compThreshold }}
-        <vue-slider ref="slider" v-model="presets[activePreset].compThreshold" />
+        <vue-slider ref="slider" v-model="presets[activePreset].compThreshold" v-on:change="saveBool = false" />
         odGain:{{ presets[activePreset].odGain }}
-        <vue-slider ref="slider" v-model="presets[activePreset].odGain" />
+        <vue-slider ref="slider" v-model="presets[activePreset].odGain" v-on:change="saveBool = false" />
         volume:{{ presets[activePreset].volume }}
-        <vue-slider ref="slider" v-model="presets[activePreset].volume" />
-
+        <vue-slider ref="slider" v-model="presets[activePreset].volume" v-on:change="saveBool = false" />
       </div>
       <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
 
-
       <!-- one button: if anything is changed (preset or value, flip to update preset button)
     if preset is updated, then chhange to save preset button -->
-      <button @click="updatePreset()" class="text-3xl font-bold underline"
+      <button @click="updatePreset()" v-if="!saveBool" class="text-3xl font-bold underline"
         style=" width: 80%; margin: 0 auto; margin-top:">
         Update
         Preset</button>
 
-      <button @click="savePreset()" class="text-3xl font-bold underline"
+      <button @click="savePreset()" v-if="saveBool" class="text-3xl font-bold underline"
         style=" width: 80%; margin: 0 auto; margin-top:">
         Save
         Preset</button>
