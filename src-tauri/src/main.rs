@@ -35,11 +35,10 @@ fn save_preset(save_info: String) {
     output = "2\n".as_bytes();
     unsafe {
         if let Some(port) = &global_port {
-            port.write(output).expect("Write failed!");
+            // port.write(output).expect("Write failed!");
         }
     }
 }
-//    invoke('change_preset', { presetNo: this.activePreset })
 #[tauri::command]
 fn change_preset(preset_no: String) {
     println!("I was invoked from JS, with this message: {}", preset_no);
@@ -50,7 +49,7 @@ fn change_preset(preset_no: String) {
     output = "2\n".as_bytes();
     unsafe {
         if let Some(port) = &global_port {
-            port.write(output).expect("Write failed!");
+            // port.write(output).expect("Write failed!");
         }
     }
 }

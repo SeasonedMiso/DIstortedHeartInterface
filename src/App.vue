@@ -20,11 +20,12 @@ export default {
     // }
     decrementActivePreset() {
       this.activePreset = (this.activePreset > 0) ? this.activePreset - 1 : 2;
-      invoke('change_preset', { presetNo: this.activePreset })
+      // invoke('change_preset', { presetNo: this.activePreset })
     },
     incrementActivePreset() {
+      console.log("abc");
       this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
-      invoke('change_preset', { presetNo: this.activePreset })
+      // invoke('change_preset', { presetNo: this.activePreset })
     },
     presetString(activePreset) {
       let stringOutput = ""
@@ -49,6 +50,9 @@ export default {
   data() {
     return {
       activePreset: 0,
+      customColor: {
+        backgroundColor: "Red"
+      },
       presets: [
         {
           lpf: 0,
@@ -84,42 +88,45 @@ export default {
 
 <template >
   <!-- <link href="../dist/output.css" rel="stylesheet"> -->
-  <div class="container" style="position: relative; max-height:100vh;">
-    <!-- <div class="flex-container"> -->
-    <!-- <button @click="decrementActivePreset()" style="   width: 10%;">◀︎</button> -->
-    <h1>Preset {{ activePreset + 1 }}</h1>
-    <!-- <button @click="incrementActivePreset()" style=" width: 10%;">▶︎</button> -->
-    <!-- </div> -->
-    <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
-    <div style=" margin: 0 auto; width: 80%;">
-      LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
-      <vue-slider ref=" slider" v-model="presets[activePreset].lpf" />
-      HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
-      <vue-slider ref="slider" v-model="presets[activePreset].hpf" />
-      gateThreshold:{{ presets[activePreset].gateThreshold }}
-      <vue-slider ref="slider" v-model="presets[activePreset].gateThreshold" />
-      compThreshold:{{ presets[activePreset].compThreshold }}
-      <vue-slider ref="slider" v-model="presets[activePreset].compThreshold" />
-      odGain:{{ presets[activePreset].odGain }}
-      <vue-slider ref="slider" v-model="presets[activePreset].odGain" />
-      volume:{{ presets[activePreset].volume }}
-      <vue-slider ref="slider" v-model="presets[activePreset].volume" />
+  <div :class="{ pre3 : activePreset==2, pre2 : activePreset==1, pre1 : activePreset ==0}">
+    <div class="container" style="position: relative; max-height:100vh;">
+      <!-- <div class="flex-container"> -->
+      <!-- <button @click="decrementActivePreset()" style="   width: 10%;">◀︎</button> -->
+      <h1>Preset {{ activePreset + 1 }}</h1>
+      <!-- <button @click="incrementActivePreset()" style=" width: 10%;">▶︎</button> -->
+      <!-- </div> -->
+      <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
+      <div style=" margin: 0 auto; width: 80%;">
+        LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
+        <vue-slider ref=" slider" v-model="presets[activePreset].lpf" />
+        HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
+        <vue-slider ref="slider" v-model="presets[activePreset].hpf" />
+        gateThreshold:{{ presets[activePreset].gateThreshold }}
+        <vue-slider ref="slider" v-model="presets[activePreset].gateThreshold" />
+        compThreshold:{{ presets[activePreset].compThreshold }}
+        <vue-slider ref="slider" v-model="presets[activePreset].compThreshold" />
+        odGain:{{ presets[activePreset].odGain }}
+        <vue-slider ref="slider" v-model="presets[activePreset].odGain" />
+        volume:{{ presets[activePreset].volume }}
+        <vue-slider ref="slider" v-model="presets[activePreset].volume" />
+
+      </div>
+      <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
+
+
+      <!-- one button: if anything is changed (preset or value, flip to update preset button)
+    if preset is updated, then chhange to save preset button -->
+      <button @click="updatePreset()" class="text-3xl font-bold underline"
+        style=" width: 80%; margin: 0 auto; margin-top:">
+        Update
+        Preset</button>
+
+      <button @click="savePreset()" class="text-3xl font-bold underline"
+        style=" width: 80%; margin: 0 auto; margin-top:">
+        Save
+        Preset</button>
 
     </div>
-    <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
-
-
-    <!-- one button: if anything is changed (preset or value, flip to update preset button)
-    if preset is updated, then chhange to save preset button -->
-    <button @click="updatePreset()" class="text-3xl font-bold underline"
-      style=" width: 80%; margin: 0 auto; margin-top:">
-      Update
-      Preset</button>
-
-    <button @click="savePreset()" class="text-3xl font-bold underline" style=" width: 80%; margin: 0 auto; margin-top:">
-      Save
-      Preset</button>
-
   </div>
 </template>
 
@@ -134,5 +141,17 @@ export default {
 
 .vue-slider {
   margin-bottom: 30px;
+}
+
+.pre3 {
+  background-color: rgb(104, 50, 50);
+}
+
+.pre2 {
+  background-color: rgb(172, 135, 67);
+}
+
+.pre1 {
+  background-color: rgb(44, 98, 44);
 }
 </style>
