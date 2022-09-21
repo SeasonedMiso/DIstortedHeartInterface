@@ -20,9 +20,11 @@ export default {
     // }
     decrementActivePreset() {
       this.activePreset = (this.activePreset > 0) ? this.activePreset - 1 : 2;
+      invoke('change_preset', { presetNo: this.activePreset })
     },
     incrementActivePreset() {
       this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
+      invoke('change_preset', { presetNo: this.activePreset })
     },
     presetString(activePreset) {
       let stringOutput = ""
@@ -35,8 +37,12 @@ export default {
       stringOutput += currentPreset.volume;
       return stringOutput
     },
+    updatePreset() {
+      let saveInfo = "u" + (this.activePreset + 1).toString() + ":" + this.presetString(this.activePreset);
+      invoke('save_preset', { saveInfo: saveInfo })
+    },
     savePreset() {
-      let saveInfo = (this.activePreset + 1).toString() + ":" + this.presetString(this.activePreset);
+      let saveInfo = "s" + (this.activePreset + 1).toString();
       invoke('save_preset', { saveInfo: saveInfo })
     }
   },
@@ -101,6 +107,15 @@ export default {
 
     </div>
     <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
+
+
+    <!-- one button: if anything is changed (preset or value, flip to update preset button)
+    if preset is updated, then chhange to save preset button -->
+    <button @click="updatePreset()" class="text-3xl font-bold underline"
+      style=" width: 80%; margin: 0 auto; margin-top:">
+      Update
+      Preset</button>
+
     <button @click="savePreset()" class="text-3xl font-bold underline" style=" width: 80%; margin: 0 auto; margin-top:">
       Save
       Preset</button>

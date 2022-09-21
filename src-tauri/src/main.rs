@@ -39,6 +39,21 @@ fn save_preset(save_info: String) {
         }
     }
 }
+//    invoke('change_preset', { presetNo: this.activePreset })
+#[tauri::command]
+fn change_preset(preset_no: String) {
+    println!("I was invoked from JS, with this message: {}", preset_no);
+    sleep(Duration::new(1, 0));
+    let mut tempString = "p".to_string();
+    tempString.push_str(&preset_no);
+    let mut output = tempString.as_bytes();
+    output = "2\n".as_bytes();
+    unsafe {
+        if let Some(port) = &global_port {
+            port.write(output).expect("Write failed!");
+        }
+    }
+}
 
 fn find_arduino() {
     let mut arduino_port_name: String;
