@@ -3,15 +3,15 @@
     windows_subsystem = "windows"
 )]
 
-use serde::de::value::Error;
 use serialport::SerialPort;
 use serialport::SerialPortType::UsbPort;
+use std::cell::RefCell;
 use std::env;
-use std::iter::{Product, Sum};
-use std::net::TcpListener;
 use std::{thread::sleep, time::Duration};
 
-static mut global_port: Option<Box<dyn SerialPort>> = None;
+thread_local!(
+    static GLOBAL_PORT: RefCell<Option<Box<dyn SerialPort>>> = RefCell::new(None)
+);
 
 #[tauri::command]
 fn greet(name: &str) -> () {
@@ -30,32 +30,35 @@ fn main() {
 
 #[tauri::command]
 fn save_preset(save_info: String) {
-    println!("I was invoked from JS, with this message: {}", save_info);
-    sleep(Duration::new(1, 0));
-    let mut output = save_info.as_bytes();
-    output = "2\n".as_bytes();
-    unsafe {
-        if let Some(port) = &global_port {
-            // port.write(output).expect("Write failed!");
+    GLOBAL_PORT.with(|port_ref| {
+        let mut port_option = &*port_ref.borrow_mut();
+        if let Some(port) = port_option {
+            // FUNCTION STARTS HERE, USE PORT HERE
+            // `port` is what you need
+
+            println!("I was invoked from JS, with this message: {}", save_info);
+            sleep(Duration::new(1, 0));
+            let mut output = save_info.as_bytes();
+            output = "2\n".as_bytes();
         }
-    }
+    });
 }
 
 #[tauri::command]
 fn change_preset(preset_no: String) {
-    println!("Preset changed to: {}", preset_no);
-    sleep(Duration::new(1, 0));
-    let mut temp_string = "p".to_string();
-    temp_string.push_str(&preset_no);
-    let mut output = temp_string.as_bytes();
-    output = "2\n".as_bytes();
-    unsafe {
-        if let Some(port) = &global_port {
-            // port.write(output).expect("Write failed!");
-        }
-    }
+    GLOBAL_PORT.with(|port_ref| {
+            let mut port_option = &*port_ref.borrow_mut();
+            if let Some(port) = port_option {
+                // FUNCTION STARTS HERE, USE PORT HERE
+                println!("Preset changed to: {}", preset_no);
+                sleep(Duration::new(1, 0));
+                let mut temp_string = "p".to_string();
+                temp_string.push_str(&preset_no);
+                let mut output = temp_string.as_bytes();
+                output = "2\n".as_bytes();
+            }
+        });
 }
-
 fn find_arduino() {
     let mut arduino_port_name: String;
     arduino_port_name = "".to_string();
@@ -98,9 +101,12 @@ fn find_arduino() {
         return;
     } else {
         // let mut port = port_result.unwrap();
-        unsafe {
-            global_port = Some(port_result.unwrap());
-        }
+        // unsafe {
+        //     global_port = Some(port_result.unwrap());
+        // }
+        GLOBAL_PORT.with(|port_ref| {
+            *port_ref.borrow_mut() = Some(port_result.unwrap());
+        });
         println!("Arduino found!");
         // sleep(Duration::new(3, 0));
         // let mut output = "This is a test. This is only a test.".as_bytes();
