@@ -1,163 +1,212 @@
 <script>
-import { reactive, toRefs } from 'vue'
-import VueSlider from 'vue-slider-component'
-import 'vue-slider-component/theme/antd.css'
-import { invoke } from '@tauri-apps/api/tauri'
+import { reactive, toRefs } from "vue";
+import VueSlider from "vue-slider-component";
+import "vue-slider-component/theme/antd.css";
+import { invoke } from "@tauri-apps/api/tauri";
 // const invoke = window.__TAURI__.invoke
 export default {
-    name: "appInterface",
-    components: {
-        VueSlider,
+  name: "appInterface",
+  components: {
+    VueSlider,
+  },
+  setup() {
+    const sliderData = reactive({ value: 0 });
+    return toRefs(sliderData);
+  },
+  methods: {
+    decrementActivePreset() {
+      this.activePreset = this.activePreset > 0 ? this.activePreset - 1 : 2;
+      this.saveBool = true;
+      invoke("change_preset", { presetNo: (this.activePreset + 1).toString() });
+      //fetch params from arduino
     },
-    setup() {
-        const sliderData = reactive({ value: 0 })
-        return toRefs(sliderData)
+    incrementActivePreset() {
+      console.log("abc");
+      this.activePreset = this.activePreset > 1 ? 0 : this.activePreset + 1;
+      this.saveBool = true;
+      invoke("change_preset", { presetNo: (this.activePreset + 1).toString() });
+      //fetch params from arduino
     },
-    methods: {
-        decrementActivePreset() {
-            this.activePreset = (this.activePreset > 0) ? this.activePreset - 1 : 2;
-            this.saveBool = true;
-            invoke('change_preset', { presetNo: (this.activePreset + 1).toString() })
-            //fetch params from arduino
-        },
-        incrementActivePreset() {
-            console.log("abc");
-            this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
-            this.saveBool = true;
-            invoke('change_preset', { presetNo: (this.activePreset + 1).toString() })
-            //fetch params from arduino
-        },
-        presetString(activePreset) {
-            let stringOutput = ""
-            let currentPreset = this.presets[this.activePreset];
-            stringOutput += currentPreset.lpf + " ";
-            stringOutput += currentPreset.hpf + " ";
-            stringOutput += currentPreset.gateThreshold + " ";
-            stringOutput += currentPreset.compThreshold + " ";
-            stringOutput += currentPreset.odGain + " ";
-            stringOutput += currentPreset.volume;
-            return stringOutput
-        },
-        updatePreset() {
-            let saveInfo = "u" + (this.activePreset + 1).toString() + ":" + this.presetString(this.activePreset);
-            console.log("123")
-            invoke('save_preset', { saveInfo: saveInfo })
-            this.saveBool = true;
-        },
-        savePreset() {
-            let saveInfo = "s" + (this.activePreset + 1).toString();
-            console.log("123")
-            invoke('save_preset', { saveInfo: saveInfo })
-        }
+    presetString(activePreset) {
+      let stringOutput = "";
+      let currentPreset = this.presets[this.activePreset];
+      stringOutput += currentPreset.lpf + " ";
+      stringOutput += currentPreset.hpf + " ";
+      stringOutput += currentPreset.gateThreshold + " ";
+      stringOutput += currentPreset.compThreshold + " ";
+      stringOutput += currentPreset.odGain + " ";
+      stringOutput += currentPreset.volume;
+      return stringOutput;
     },
-    data() {
-        return {
-            saveBool: true,
-            activePreset: 0,
-            customColor: {
-                backgroundColor: "Red"
-            },
-            presets: [
-                {
-                    lpf: 0,
-                    hpf: 0,
-                    gateThreshold: 0,
-                    compThreshold: 0,
-                    odGain: 0,
-                    volume: 0,
-                },
-                {
-                    lpf: 0,
-                    hpf: 0,
-                    gateThreshold: 0,
-                    compThreshold: 0,
-                    odGain: 0,
-                    volume: 0,
-                },
-                {
-                    lpf: 0,
-                    hpf: 0,
-                    gateThreshold: 0,
-                    compThreshold: 0,
-                    odGain: 0,
-                    volume: 0,
-                }
-            ]
-        }
-    }
+    updatePreset() {
+      let saveInfo =
+        "u" +
+        (this.activePreset + 1).toString() +
+        ":" +
+        this.presetString(this.activePreset);
+      console.log("123");
+      invoke("save_preset", { saveInfo: saveInfo });
+      this.saveBool = true;
+    },
+    savePreset() {
+      let saveInfo = "s" + (this.activePreset + 1).toString();
+      console.log("123");
+      invoke("save_preset", { saveInfo: saveInfo });
+    },
+  },
+  data() {
+    return {
+      saveBool: true,
+      activePreset: 0,
+      customColor: {
+        backgroundColor: "Red",
+      },
+      presets: [
+        {
+          lpf: 0,
+          hpf: 0,
+          gateThreshold: 0,
+          compThreshold: 0,
+          odGain: 0,
+          volume: 0,
+        },
+        {
+          lpf: 0,
+          hpf: 0,
+          gateThreshold: 0,
+          compThreshold: 0,
+          odGain: 0,
+          volume: 0,
+        },
+        {
+          lpf: 0,
+          hpf: 0,
+          gateThreshold: 0,
+          compThreshold: 0,
+          odGain: 0,
+          volume: 0,
+        },
+      ],
+    };
+  },
 };
 </script>
-<script setup>
-</script>
+<script setup></script>
 
-<template >
-    <!-- <link href="../dist/output.css" rel="stylesheet"> -->
-    <div :class="{ pre3 : activePreset==2, pre2 : activePreset==1, pre1 : activePreset ==0}"
-        style="position: fixed, width: 100vw; height: 100vh">
-        <div class="container" style="position: relative; max-height:100vh;">
-            <h1>Preset {{ activePreset + 1 }}</h1>
-            <button @click="decrementActivePreset()"
-                style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
-            <div style=" margin: 0 auto; width: 80%;">
-                LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
-                <vue-slider ref=" slider" v-model="presets[activePreset].lpf" v-on:change="saveBool = false" />
-                HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
-                <vue-slider ref="slider" v-model="presets[activePreset].hpf" v-on:change="saveBool = false" />
-                gateThreshold:{{ presets[activePreset].gateThreshold }}
-                <vue-slider ref="slider" v-model="presets[activePreset].gateThreshold" v-on:change="saveBool = false" />
-                compThreshold:{{ presets[activePreset].compThreshold }}
-                <vue-slider ref="slider" v-model="presets[activePreset].compThreshold" v-on:change="saveBool = false" />
-                odGain:{{ presets[activePreset].odGain }}
-                <vue-slider ref="slider" v-model="presets[activePreset].odGain" v-on:change="saveBool = false" />
-                volume:{{ presets[activePreset].volume }}
-                <vue-slider ref="slider" v-model="presets[activePreset].volume" v-on:change="saveBool = false" />
-            </div>
-            <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
+<template>
+  <!-- <link href="../dist/output.css" rel="stylesheet"> -->
+  <div
+    :class="{
+      pre3: activePreset == 2,
+      pre2: activePreset == 1,
+      pre1: activePreset == 0,
+    }"
+    style="position: fixed, width: 100vw; height: 100vh"
+  >
+    <div class="container" style="position: relative; max-height: 100vh">
+      <h1>Preset {{ activePreset + 1 }}</h1>
+      <button
+        @click="decrementActivePreset()"
+        style="margin: 0 auto; margin-bottom: 30px; width: 90%"
+      >
+        ▲
+      </button>
+      <div style="margin: 0 auto; width: 80%">
+        LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
+        <vue-slider
+          ref=" slider"
+          v-model="presets[activePreset].lpf"
+          v-on:change="saveBool = false"
+        />
+        HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
+        <vue-slider
+          ref="slider"
+          v-model="presets[activePreset].hpf"
+          v-on:change="saveBool = false"
+        />
+        gateThreshold:{{ presets[activePreset].gateThreshold }}
+        <vue-slider
+          ref="slider"
+          v-model="presets[activePreset].gateThreshold"
+          v-on:change="saveBool = false"
+        />
+        compThreshold:{{ presets[activePreset].compThreshold }}
+        <vue-slider
+          ref="slider"
+          v-model="presets[activePreset].compThreshold"
+          v-on:change="saveBool = false"
+        />
+        odGain:{{ presets[activePreset].odGain }}
+        <vue-slider
+          ref="slider"
+          v-model="presets[activePreset].odGain"
+          v-on:change="saveBool = false"
+        />
+        volume:{{ presets[activePreset].volume }}
+        <vue-slider
+          ref="slider"
+          v-model="presets[activePreset].volume"
+          v-on:change="saveBool = false"
+        />
+      </div>
+      <button
+        @click="incrementActivePreset()"
+        style="margin: 0 auto; margin-bottom: 30px; width: 90%"
+      >
+        ▼
+      </button>
 
-            <!-- one button: if anything is changed (preset or value, flip to update preset button)
+      <!-- one button: if anything is changed (preset or value, flip to update preset button)
     if preset is updated, then chhange to save preset button -->
-            <button @click="updatePreset()" v-if="!saveBool" class="text-3xl font-bold underline"
-                style=" width: 80%; margin: 0 auto; margin-top:">
-                Update
-                Preset</button>
+      <button
+        @click="updatePreset()"
+        v-if="!saveBool"
+        class="text-3xl font-bold underline"
+        style="width: 80%; margin: 0 auto; margin-top: "
+      >
+        Update Preset
+      </button>
 
-            <button @click="savePreset()" v-if="saveBool" class="text-3xl font-bold underline"
-                style=" width: 80%; margin: 0 auto; margin-top:">
-                Save
-                Preset</button>
-
-        </div>
+      <button
+        @click="savePreset()"
+        v-if="saveBool"
+        class="text-3xl font-bold underline"
+        style="width: 80%; margin: 0 auto; margin-top: "
+      >
+        Save Preset
+      </button>
     </div>
+  </div>
 </template>
 
 <style scoped>
 .logo.vite:hover {
-    filter: drop-shadow(0 0 2em #747bff);
+  filter: drop-shadow(0 0 2em #747bff);
 }
 
 .logo.vue:hover {
-    filter: drop-shadow(0 0 2em #249b73);
+  filter: drop-shadow(0 0 2em #249b73);
 }
 
 .vue-slider {
-    margin-bottom: 30px;
+  margin-bottom: 30px;
 }
 
 .pre3 {
-    background-color: rgb(104, 50, 50);
+  background-color: rgb(104, 50, 50);
 }
 
 .pre2 {
-    background-color: rgb(172, 135, 67);
+  background-color: rgb(172, 135, 67);
 }
 
 .pre1 {
-    background-color: rgb(44, 98, 44);
+  background-color: rgb(44, 98, 44);
 }
 
 html,
 body {
-    margin: 0px !important;
-    padding: 0px !important;
+  margin: 0px !important;
+  padding: 0px !important;
 }
 </style>
