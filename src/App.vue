@@ -1,160 +1,48 @@
-<script>
-import { reactive, toRefs } from 'vue'
-import VueSlider from 'vue-slider-component'
-import 'vue-slider-component/theme/antd.css'
+<script setup>
+import appInterface from './components/appInterface.vue'
+import connectArduinoMsg from './components/connectArduinoMsg.vue'
 import { invoke } from '@tauri-apps/api/tauri'
-// const invoke = window.__TAURI__.invoke
+
+
+</script>
+
+<script>
 export default {
   name: "App",
   components: {
-    VueSlider,
-  },
-  setup() {
-    const sliderData = reactive({ value: 0 })
-    return toRefs(sliderData)
-  },
-  methods: {
-    decrementActivePreset() {
-      this.activePreset = (this.activePreset > 0) ? this.activePreset - 1 : 2;
-      this.saveBool = true;
-      invoke('change_preset', { presetNo: (this.activePreset + 1).toString() })
-      //fetch params from arduino
-    },
-    incrementActivePreset() {
-      console.log("abc");
-      this.activePreset = (this.activePreset > 1) ? 0 : this.activePreset + 1;
-      this.saveBool = true;
-      invoke('change_preset', { presetNo: (this.activePreset + 1).toString() })
-      //fetch params from arduino
-    },
-    presetString(activePreset) {
-      let stringOutput = ""
-      let currentPreset = this.presets[this.activePreset];
-      stringOutput += currentPreset.lpf + " ";
-      stringOutput += currentPreset.hpf + " ";
-      stringOutput += currentPreset.gateThreshold + " ";
-      stringOutput += currentPreset.compThreshold + " ";
-      stringOutput += currentPreset.odGain + " ";
-      stringOutput += currentPreset.volume;
-      return stringOutput
-    },
-    updatePreset() {
-      let saveInfo = "u" + (this.activePreset + 1).toString() + ":" + this.presetString(this.activePreset);
-      invoke('save_preset', { saveInfo: saveInfo })
-      this.saveBool = true;
-    },
-    savePreset() {
-      let saveInfo = "s" + (this.activePreset + 1).toString();
-      invoke('save_preset', { saveInfo: saveInfo })
-    }
+    appInterface, connectArduinoMsg
   },
   data() {
     return {
-      saveBool: true,
-      activePreset: 0,
-      customColor: {
-        backgroundColor: "Red"
-      },
-      presets: [
-        {
-          lpf: 0,
-          hpf: 0,
-          gateThreshold: 0,
-          compThreshold: 0,
-          odGain: 0,
-          volume: 0,
-        },
-        {
-          lpf: 0,
-          hpf: 0,
-          gateThreshold: 0,
-          compThreshold: 0,
-          odGain: 0,
-          volume: 0,
-        },
-        {
-          lpf: 0,
-          hpf: 0,
-          gateThreshold: 0,
-          compThreshold: 0,
-          odGain: 0,
-          volume: 0,
-        }
-      ]
+      polling: null,
+      arduinoState: "0",
+    }
+  },
+  methods: {
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    },
+    pollArduino() {
+      this.polling = setInterval(() => {
+        invoke('arduino_found').then((message) => {
+          this.arduinoState = message;
+          // console.log(this.arduinoState)
+        })
+      }, 1000)
     }
   }
-};
-</script>
-<script setup>
-</script>
+  , beforeDestroy() {
+    clearInterval(this.polling)
+  },
+  created() {
+    this.pollArduino()
+  },
+}
 
-<template >
-  <!-- <link href="../dist/output.css" rel="stylesheet"> -->
-  <div :class="{ pre3 : activePreset==2, pre2 : activePreset==1, pre1 : activePreset ==0}"
-    style="position: fixed, width: 100vw; height: 100vh">
-    <div class="container" style="position: relative; max-height:100vh;">
-      <h1>Preset {{ activePreset + 1 }}</h1>
-      <button @click="decrementActivePreset()" style=" margin: 0 auto; margin-bottom: 30px; width: 90%;">▲</button>
-      <div style=" margin: 0 auto; width: 80%;">
-        LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
-        <vue-slider ref=" slider" v-model="presets[activePreset].lpf" v-on:change="saveBool = false" />
-        HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
-        <vue-slider ref="slider" v-model="presets[activePreset].hpf" v-on:change="saveBool = false" />
-        gateThreshold:{{ presets[activePreset].gateThreshold }}
-        <vue-slider ref="slider" v-model="presets[activePreset].gateThreshold" v-on:change="saveBool = false" />
-        compThreshold:{{ presets[activePreset].compThreshold }}
-        <vue-slider ref="slider" v-model="presets[activePreset].compThreshold" v-on:change="saveBool = false" />
-        odGain:{{ presets[activePreset].odGain }}
-        <vue-slider ref="slider" v-model="presets[activePreset].odGain" v-on:change="saveBool = false" />
-        volume:{{ presets[activePreset].volume }}
-        <vue-slider ref="slider" v-model="presets[activePreset].volume" v-on:change="saveBool = false" />
-      </div>
-      <button @click="incrementActivePreset()" style="margin: 0 auto; margin-bottom: 30px; width: 90%;">▼</button>
 
-      <!-- one button: if anything is changed (preset or value, flip to update preset button)
-    if preset is updated, then chhange to save preset button -->
-      <button @click="updatePreset()" v-if="!saveBool" class="text-3xl font-bold underline"
-        style=" width: 80%; margin: 0 auto; margin-top:">
-        Update
-        Preset</button>
+</script> 
 
-      <button @click="savePreset()" v-if="saveBool" class="text-3xl font-bold underline"
-        style=" width: 80%; margin: 0 auto; margin-top:">
-        Save
-        Preset</button>
-
-    </div>
-  </div>
+<template>
+  <appInterface v-if="arduinoState==='1'" />
+  <connectArduinoMsg v-if="arduinoState==='0'" />
 </template>
-
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
-
-.vue-slider {
-  margin-bottom: 30px;
-}
-
-.pre3 {
-  background-color: rgb(104, 50, 50);
-}
-
-.pre2 {
-  background-color: rgb(172, 135, 67);
-}
-
-.pre1 {
-  background-color: rgb(44, 98, 44);
-}
-
-html,
-body {
-  margin: 0px !important;
-  padding: 0px !important;
-}
-</style>

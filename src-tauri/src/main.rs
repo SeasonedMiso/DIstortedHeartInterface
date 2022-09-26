@@ -2,64 +2,93 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-
 use serialport::SerialPort;
 use serialport::SerialPortType::UsbPort;
-use std::cell::RefCell;
 use std::env;
+use std::sync::Mutex;
 use std::{thread::sleep, time::Duration};
+use tauri::State;
 
-thread_local!(
-    static GLOBAL_PORT: RefCell<Option<Box<dyn SerialPort>>> = RefCell::new(None)
-);
-
-#[tauri::command]
-fn greet(name: &str) -> () {
-    format!("Hello, {}! You've been greeted from Rust!", name);
+struct ArduinoContext {
+    pub port: Mutex<Option<Box<dyn SerialPort>>>,
+}
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    message: String,
 }
 
 fn main() {
-    find_arduino();
+    let port = find_arduino();
     tauri::Builder::default()
-        // This is where you pass in your commands
-        .invoke_handler(tauri::generate_handler![save_preset])
-        .invoke_handler(tauri::generate_handler![change_preset])
+        .manage(ArduinoContext {
+            port: Mutex::new(port),
+        })
+        .invoke_handler(tauri::generate_handler![
+            change_preset,
+            save_preset,
+            arduino_found
+        ])
         .run(tauri::generate_context!())
         .expect("failed to run app");
+    find_arduino();
 }
 
 #[tauri::command]
-fn save_preset(save_info: String) {
-    GLOBAL_PORT.with(|port_ref| {
-        let mut port_option = &*port_ref.borrow_mut();
-        if let Some(port) = port_option {
-            // FUNCTION STARTS HERE, USE PORT HERE
-            // `port` is what you need
+fn arduino_found(arduino_context: State<ArduinoContext>) -> String {
+    let mut mutex_guard = arduino_context.port.lock().unwrap();
+    let port_option = mutex_guard.as_mut();
+    if let Some(port) = port_option {
+        let result = port.write("buf".as_bytes());
+        if let Ok(_) = result {
+            "1".to_string()
+        } else {
+            let new_port = find_arduino();
+            *mutex_guard = new_port;
+            "0".to_string()
+        }
+    } else {
+        let new_port = find_arduino();
+        *mutex_guard = new_port;
+        "0".to_string()
+    }
+}
 
-            println!("I was invoked from JS, with this message: {}", save_info);
+#[tauri::command]
+fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
+    println!("Save preset: {}", save_info);
+    let mut mutex_guard = arduino_context.port.lock().unwrap();
+
+    let port_option = mutex_guard.as_mut();
+    if let Some(port) = port_option {
+        let result = port.write("buf".as_bytes());
+        if let Ok(_) = result {
             sleep(Duration::new(1, 0));
             let mut output = save_info.as_bytes();
             output = "2\n".as_bytes();
+            println!("Successful port write");
         }
-    });
+    }
 }
 
 #[tauri::command]
-fn change_preset(preset_no: String) {
-    GLOBAL_PORT.with(|port_ref| {
-            let mut port_option = &*port_ref.borrow_mut();
-            if let Some(port) = port_option {
-                // FUNCTION STARTS HERE, USE PORT HERE
-                println!("Preset changed to: {}", preset_no);
-                sleep(Duration::new(1, 0));
-                let mut temp_string = "p".to_string();
-                temp_string.push_str(&preset_no);
-                let mut output = temp_string.as_bytes();
-                output = "2\n".as_bytes();
-            }
-        });
+fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
+    println!("Preset changed to: {}", preset_no);
+    let mut mutex_guard = arduino_context.port.lock().unwrap();
+    let port_option = mutex_guard.as_mut();
+    if let Some(port) = port_option {
+        let result = port.write("buf".as_bytes());
+        if let Ok(_) = result {
+            sleep(Duration::new(1, 0));
+            let mut temp_string = "p".to_string();
+            temp_string.push_str(&preset_no);
+            let mut output = temp_string.as_bytes();
+            output = "2\n".as_bytes();
+            println!("Successful port write");
+        }
+    }
 }
-fn find_arduino() {
+
+fn find_arduino() -> Option<Box<dyn SerialPort>> {
     let mut arduino_port_name: String;
     arduino_port_name = "".to_string();
     let ports = serialport::available_ports().expect("No ports found!");
@@ -97,37 +126,31 @@ fn find_arduino() {
         .timeout(Duration::from_millis(10))
         .open();
     if let Err(_err) = port_result {
-        println!("Arduino not found");
-        return;
+        // println!("Arduino not found");
+        None
     } else {
-        // let mut port = port_result.unwrap();
-        // unsafe {
-        //     global_port = Some(port_result.unwrap());
-        // }
-        GLOBAL_PORT.with(|port_ref| {
-            *port_ref.borrow_mut() = Some(port_result.unwrap());
-        });
-        println!("Arduino found!");
-        // sleep(Duration::new(3, 0));
-        // let mut output = "This is a test. This is only a test.".as_bytes();
-        // output = "2\n".as_bytes();
-        // unsafe {
-        //     global_port.write(output).expect("Write failed!");
-        // }
-        //
-        //to read data:
-        //
-        // port.flush().unwrap();
-        // let mut serial_buf: Vec<u8> = vec![0; 32];
-        // loop {
-        //     // .expect("Found no data!");
-        //     let read_result = port.read(serial_buf.as_mut_slice());
-        //     if let Ok(_) = read_result {
-        //         let read_string = String::from_utf8_lossy(&serial_buf).to_string();
-        //         println!("{}", read_string);
-        //         println!("{:?}", serial_buf);
-        //         break
-        //     };
-        // }
+        // println!("Arduino found!");
+        port_result.ok()
     }
+    // sleep(Duration::new(3, 0));
+    // let mut output = "This is a test. This is only a test.".as_bytes();
+    // output = "2\n".as_bytes();
+    // unsafe {
+    //     global_port.write(output).expect("Write failed!");
+    // }
+    //
+    //to read data:
+    //
+    // port.flush().unwrap();
+    // let mut serial_buf: Vec<u8> = vec![0; 32];
+    // loop {
+    //     // .expect("Found no data!");
+    //     let read_result = port.read(serial_buf.as_mut_slice());
+    //     if let Ok(_) = read_result {
+    //         let read_string = String::from_utf8_lossy(&serial_buf).to_string();
+    //         println!("{}", read_string);
+    //         println!("{:?}", serial_buf);
+    //         break
+    //     };
+    // }
 }
