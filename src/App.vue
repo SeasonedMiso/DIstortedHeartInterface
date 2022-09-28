@@ -1,6 +1,7 @@
 <script setup>
 import appInterface from "./components/appInterface.vue";
 import connectArduinoMsg from "./components/connectArduinoMsg.vue";
+import testPortMessage from "./components/testPortMessage.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 </script>
 
@@ -39,6 +40,7 @@ export default {
 };
 </script>
 <template>
-  <appInterface v-if="arduinoState === '1'" />
+  <testPortMessage v-if="arduinoState === '1'" />
+  <!-- <appInterface v-if="arduinoState === '1'" /> -->
   <connectArduinoMsg v-if="arduinoState === '0'" />
 </template>

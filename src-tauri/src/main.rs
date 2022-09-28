@@ -26,7 +26,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             change_preset,
             save_preset,
-            arduino_found
+            arduino_found,
+            send_test_msg
         ])
         .run(tauri::generate_context!())
         .expect("failed to run app");
@@ -38,7 +39,8 @@ fn arduino_found(arduino_context: State<ArduinoContext>) -> String {
     let mut mutex_guard = arduino_context.port.lock().unwrap();
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
-        let result = port.write("buf".as_bytes());
+        let result = port.write("$".as_bytes());
+        println!("here");
         if let Ok(_) = result {
             "1".to_string()
         } else {
@@ -60,29 +62,46 @@ fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
 
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
-        let result = port.write("buf".as_bytes());
+        let result = port.write("$".as_bytes());
         if let Ok(_) = result {
             sleep(Duration::new(1, 0));
             let mut output = save_info.as_bytes();
-            output = "2\n".as_bytes();
+            // output = "2\n".as_bytes();
             println!("Successful port write");
         }
     }
 }
 
 #[tauri::command]
+fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
+    println!("Sending message: {}", test_msg);
+    let mut mutex_guard = arduino_context.port.lock().unwrap();
+
+    let port_option = mutex_guard.as_mut();
+    if let Some(port) = port_option {
+        let result = port.write("$".as_bytes());
+        if let Ok(_) = result {
+            sleep(Duration::new(1, 0));
+            let mut output = test_msg.as_bytes();
+            // output = "2\n".as_bytes();
+            port.write(output).expect("Write failed!");
+            println!("Successful port write");
+        }
+    }
+}
+#[tauri::command]
 fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
     println!("Preset changed to: {}", preset_no);
     let mut mutex_guard = arduino_context.port.lock().unwrap();
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
-        let result = port.write("buf".as_bytes());
+        let result = port.write("$".as_bytes());
         if let Ok(_) = result {
             sleep(Duration::new(1, 0));
             let mut temp_string = "p".to_string();
             temp_string.push_str(&preset_no);
             let mut output = temp_string.as_bytes();
-            output = "2\n".as_bytes();
+            // output = "2\n".as_bytes();
             println!("Successful port write");
         }
     }
@@ -98,8 +117,8 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             if p.port_name.contains("cu") {
                 arduino_port_name = match p.port_type {
                     UsbPort(info) => {
-                        println!("{:#06x}", info.vid);
-                        println!("{:#06x}", info.pid);
+                        // println!("{:#06x}", info.vid);
+                        // println!("{:#06x}", info.pid);
                         if info.vid == 0x2341 && info.pid == 0x0043 {
                             p.port_name
                         } else {
@@ -111,7 +130,7 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             }
         } else if cfg!(windows) {
             if p.port_name.contains("COM4") {
-                println!("{:?}", p.port_type);
+                // println!("{:?}", p.port_type);
                 if let UsbPort(info) = p.port_type {
                     if let Some(product) = info.product {
                         if product.contains("Arduino Uno") {
