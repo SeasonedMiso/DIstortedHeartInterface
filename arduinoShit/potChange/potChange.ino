@@ -20,7 +20,7 @@ void setup()
   digitalWrite(LED_BUILTIN, LOW);
   freq = 1;
   startUpWait();
-  Serial.begin(9600);
+  Serial.begin(115200);
   digipot.setToZero();
   // potTest();
   lcd.begin(16, 2);
@@ -71,8 +71,6 @@ void loop()
       Serial.println(resistanceText + digipot.getResistance() + " ohms (requested " + new_resistance + " ohms)");
       String wiperPinVoltageText = "Wiper pin voltage: ";
       Serial.println(wiperPinVoltageText + 4.9 * reading + " mV");
-      delay(100); // give DS1804 time to change, and for analogue reading to settle
-
       inString = Serial.readString();
       Serial.println(inString);
     }
@@ -85,22 +83,16 @@ void startUpWait()
   lcd.print(".");
   lcd.setCursor(0, 1);
   lcd.print("");
-  delay(500);
+  delay(300);
   lcd.begin(16, 2);
   lcd.print("..");
-  lcd.setCursor(0, 1);
-  lcd.print("");
-  delay(500);
+  delay(300);
   lcd.begin(16, 2);
   lcd.print(".");
-  lcd.setCursor(0, 1);
-  lcd.print("");
-  delay(500);
+  delay(300);
   lcd.begin(16, 2);
   lcd.print("...");
-  lcd.setCursor(0, 1);
-  lcd.print("");
-  delay(500);
+  delay(100);
 }
 String removeChar(char *str, char c)
 {

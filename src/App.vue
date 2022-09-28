@@ -40,7 +40,7 @@ export default {
 };
 </script>
 <template>
-  <testPortMessage v-if="arduinoState === '1'" />
-  <!-- <appInterface v-if="arduinoState === '1'" /> -->
+  <!-- <testPortMessage v-if="arduinoState === '1'" /> -->
+  <appInterface v-if="arduinoState === '1'" />
   <connectArduinoMsg v-if="arduinoState === '0'" />
 </template>

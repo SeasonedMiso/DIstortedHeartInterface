@@ -40,7 +40,7 @@ fn arduino_found(arduino_context: State<ArduinoContext>) -> String {
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
-        println!("here");
+        // println!("here");
         if let Ok(_) = result {
             "1".to_string()
         } else {
@@ -66,6 +66,7 @@ fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
         if let Ok(_) = result {
             sleep(Duration::new(1, 0));
             let mut output = save_info.as_bytes();
+            port.write(output).expect("Write failed!");
             // output = "2\n".as_bytes();
             println!("Successful port write");
         }
@@ -101,6 +102,7 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
             let mut temp_string = "p".to_string();
             temp_string.push_str(&preset_no);
             let mut output = temp_string.as_bytes();
+            port.write(output).expect("Write failed!");
             // output = "2\n".as_bytes();
             println!("Successful port write");
         }
@@ -141,7 +143,7 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             }
         }
     }
-    let port_result = serialport::new(arduino_port_name, 9600)
+    let port_result = serialport::new(arduino_port_name, 115200)
         .timeout(Duration::from_millis(10))
         .open();
     if let Err(_err) = port_result {
