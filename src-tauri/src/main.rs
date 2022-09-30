@@ -35,12 +35,14 @@ fn main() {
 }
 
 #[tauri::command]
-fn arduino_found(arduino_context: State<ArduinoContext>) -> String {
+fn arduino_found(
+    // busy_with_operation: bool,
+    arduino_context: State<ArduinoContext>,
+) -> String {
     let mut mutex_guard = arduino_context.port.lock().unwrap();
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
-        // println!("here");
         if let Ok(_) = result {
             "1".to_string()
         } else {
@@ -64,17 +66,25 @@ fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
         if let Ok(_) = result {
-            sleep(Duration::new(1, 0));
-            let mut output = save_info.as_bytes();
+            sleep(Duration::new(0, 1000));
+            let output = save_info.as_bytes();
             port.write(output).expect("Write failed!");
-            // output = "2\n".as_bytes();
-            println!("Successful port write");
+            if (await_arduino(port)) {
+                println!("Successful port write");
+            } else {
+                println!("Write operation failed");
+                //throw error here
+            }
         }
     }
 }
 
 #[tauri::command]
 fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
+    if test_msg.len() > 20 {
+        println!("Write operation failed");
+        return;
+    }
     println!("Sending message: {}", test_msg);
     let mut mutex_guard = arduino_context.port.lock().unwrap();
 
@@ -82,11 +92,15 @@ fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
         if let Ok(_) = result {
-            sleep(Duration::new(1, 0));
-            let mut output = test_msg.as_bytes();
-            // output = "2\n".as_bytes();
+            sleep(Duration::new(0, 1000));
+            let output = test_msg.as_bytes();
             port.write(output).expect("Write failed!");
-            println!("Successful port write");
+            if (await_arduino(port)) {
+                println!("Successful port write");
+            } else {
+                println!("Write operation failed");
+                //throw error here
+            }
         }
     }
 }
@@ -98,13 +112,54 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
         if let Ok(_) = result {
-            sleep(Duration::new(1, 0));
+            sleep(Duration::new(0, 1000));
             let mut temp_string = "p".to_string();
             temp_string.push_str(&preset_no);
-            let mut output = temp_string.as_bytes();
+            let output = temp_string.as_bytes();
             port.write(output).expect("Write failed!");
-            // output = "2\n".as_bytes();
-            println!("Successful port write");
+            if (await_arduino(port)) {
+                println!("Successful port write");
+            } else {
+                println!("Write operation failed");
+                //throw error here
+            }
+        }
+    }
+}
+fn await_arduino(port: &mut Box<dyn SerialPort>) -> bool {
+    println!("Awaiting acknowledgement from arduino...");
+    // port.flush().unwrap();
+    let mut serial_buf: Vec<u8> = vec![0; 32];
+    let mut fail_index = 0;
+    loop {
+        // .expect("Found no data!");
+        sleep(Duration::new(1, 0));
+        let read_result = port.read(serial_buf.as_mut_slice());
+        let read_string = String::from_utf8_lossy(&serial_buf).to_string();
+        let formatted_string = read_string.replace("$", "").replace("\n", "");
+        sleep(Duration::new(0, 1000));
+        if let Ok(size) = read_result {
+            let lastChar = read_string.chars().nth(size - 3).unwrap();
+            let strLen = size;
+            if lastChar == '@' {
+                println!("Ack got!");
+                return true;
+            } else {
+                println!("failed due to not reading @ succesfully");
+                println!("result:{:?}", read_result);
+                println!("Received {}", read_string);
+                println!("Formatted to {}", formatted_string);
+                return false;
+            }
+        } else {
+            fail_index += 1;
+            println!("result:{:?}", read_result);
+            println!("timeout time:{:?}", port.timeout());
+            println!("Received {}", read_string);
+            println!("Formatted to {}", formatted_string);
+        }
+        if fail_index > 10 {
+            return false;
         }
     }
 }
@@ -119,8 +174,6 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             if p.port_name.contains("cu") {
                 arduino_port_name = match p.port_type {
                     UsbPort(info) => {
-                        // println!("{:#06x}", info.vid);
-                        // println!("{:#06x}", info.pid);
                         if info.vid == 0x2341 && info.pid == 0x0043 {
                             p.port_name
                         } else {
@@ -132,7 +185,6 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             }
         } else if cfg!(windows) {
             if p.port_name.contains("COM4") {
-                // println!("{:?}", p.port_type);
                 if let UsbPort(info) = p.port_type {
                     if let Some(product) = info.product {
                         if product.contains("Arduino Uno") {
@@ -143,35 +195,12 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             }
         }
     }
-    let port_result = serialport::new(arduino_port_name, 115200)
-        .timeout(Duration::from_millis(10))
+    let port_result = serialport::new(arduino_port_name, 9600)
+        .timeout(Duration::from_millis(100))
         .open();
     if let Err(_err) = port_result {
-        // println!("Arduino not found");
         None
     } else {
-        // println!("Arduino found!");
         port_result.ok()
     }
-    // sleep(Duration::new(3, 0));
-    // let mut output = "This is a test. This is only a test.".as_bytes();
-    // output = "2\n".as_bytes();
-    // unsafe {
-    //     global_port.write(output).expect("Write failed!");
-    // }
-    //
-    //to read data:
-    //
-    // port.flush().unwrap();
-    // let mut serial_buf: Vec<u8> = vec![0; 32];
-    // loop {
-    //     // .expect("Found no data!");
-    //     let read_result = port.read(serial_buf.as_mut_slice());
-    //     if let Ok(_) = read_result {
-    //         let read_string = String::from_utf8_lossy(&serial_buf).to_string();
-    //         println!("{}", read_string);
-    //         println!("{:?}", serial_buf);
-    //         break
-    //     };
-    // }
 }

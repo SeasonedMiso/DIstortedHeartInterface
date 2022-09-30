@@ -26,7 +26,7 @@ export default {
       this.polling = setInterval(() => {
         invoke("arduino_found").then((message) => {
           this.arduinoState = message;
-          // console.log(this.arduinoState)
+          console.log(this.arduinoState)
         });
       }, 1000);
     },
@@ -40,7 +40,7 @@ export default {
 };
 </script>
 <template>
-  <!-- <testPortMessage v-if="arduinoState === '1'" /> -->
+  <testPortMessage v-if="arduinoState === '1'" />
   <appInterface v-if="arduinoState === '1'" />
   <connectArduinoMsg v-if="arduinoState === '0'" />
 </template>

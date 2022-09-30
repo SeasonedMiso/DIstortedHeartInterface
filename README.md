@@ -1,7 +1,14 @@
 yarn tauri dev
 
+
+theres a small chance of polling getting in the way of receiving ack bit
+
+
 Maybe led output from arduino too?
 
+protocol for communcation:
+issue-- unable to serparate reads from writes
+solution-- preface with binary bit for sent from app vs arduino??
 
 Linux setup---
 

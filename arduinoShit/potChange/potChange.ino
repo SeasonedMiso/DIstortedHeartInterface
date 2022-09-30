@@ -1,5 +1,15 @@
 #include <LiquidCrystal.h>
 #include <DS1804.h>
+#include <SimpleSerialProtocol.h>
+
+// void onError(uint8_t errorNum);
+// void onReceivedValues();
+// const long CHARACTER_TIMEOUT = 500; // wait max 500 ms between single chars to be received
+// const byte COMMAND_ID_RECEIVE = '$';
+// const byte COMMAND_ID_SEND = '@';
+// SimpleSerialProtocol ssp(Serial, BAUDRATE, CHARACTER_TIMEOUT, onError, 'a', 'z'); // ASCII: 'a' - 'z' (26 byes of RAM is reserved)
+// //https://gitlab.com/yesbotics/simple-serial-protocol/simple-serial-protocol-arduino
+
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
@@ -7,6 +17,7 @@ const byte wiperPin = A5;
 // DS1804 digipot = DS1804( 6, 5, 4, DS1804_FIFTY );
 DS1804 digipot = DS1804(6, 5, 4, DS1804_TEN);
 
+const long BAUDRATE = 9600; // speed of serial connection
 int reading = 0;
 unsigned long new_resistance = 0;
 String inString;
@@ -20,62 +31,86 @@ void setup()
   digitalWrite(LED_BUILTIN, LOW);
   freq = 1;
   startUpWait();
-  Serial.begin(115200);
+  Serial.begin(BAUDRATE);
+
+  // ssp.init();
   digipot.setToZero();
   // potTest();
+
   lcd.begin(16, 2);
   lcd.print("initArd");
   lcd.setCursor(0, 1);
   lcd.print("");
+  Serial.println("Initialized");
+  delay(100);
 }
 
 void loop()
 {
-  while (Serial.available() == 0)
-  {
-
-    digitalWrite(LED_BUILTIN, HIGH); // turn the LED on (HIGH is the voltage level)
-    delay(500 / freq);               // wait for a second
-    digitalWrite(LED_BUILTIN, LOW);  // turn the LED off by making the voltage LOW
-    delay(500 / freq);               // wait for a second
-  }
-
+  // delay(10);
+  // // while (Serial.available() == 0)
+  // // {
+  // // }
+  //  ssp.loop();
   if (Serial.available() > 0)
   {
-
     // delay(100);
     digitalWrite(LED_BUILTIN, HIGH);
     inString = Serial.readString();
     Serial.println(inString);
     inString = removeChar(inString.c_str(), '$');
-
     if (inString.length() > 0)
     {
-
       lcd.begin(16, 2);
       lcd.print(inString);
       lcd.setCursor(0, 1);
       lcd.print("");
-
-      new_resistance = inString.toFloat();
-      if (inString.toInt() > 0 && inString.toInt() < 50)
-      {
-        freq = inString.toInt();
-      }
-      digipot.setResistance(new_resistance);
-      delay(100); // give DS1804 time to change, and for analogue reading to settle
-      reading = analogRead(wiperPin);
-      String wiperPositionText = "DS1804 Wiper at ";
-      Serial.println(wiperPositionText + digipot.getWiperPosition());
-      String resistanceText = "DS1804 Resistance set to ";
-      Serial.println(resistanceText + digipot.getResistance() + " ohms (requested " + new_resistance + " ohms)");
-      String wiperPinVoltageText = "Wiper pin voltage: ";
-      Serial.println(wiperPinVoltageText + 4.9 * reading + " mV");
-      inString = Serial.readString();
-      Serial.println(inString);
+      //     if(isValidNumber(inString)){
+      //       new_resistance = inString.toFloat();
+      //     if (inString.toInt() > 0 && inString.toInt() < 50)
+      //     {
+      //       freq = inString.toInt();
+      //     }
+      //     // digipot.setResistance(new_resistance);
+      //     delay(100); // give DS1804 time to change, and for analogue reading to settle
+      //     // reading = analogRead(wiperPin);
+      //     // String wiperPositionText = "DS1804 Wiper at ";
+      //     // Serial.println(wiperPositionText + digipot.getWiperPosition());
+      //     // String resistanceText = "DS1804 Resistance set to ";
+      //     // Serial.println(resistanceText + digipot.getResistance() + " ohms (requested " + new_resistance + " ohms)");
+      //     // String wiperPinVoltageText = "Wiper pin voltage: ";
+      //     // Serial.println(wiperPinVoltageText + 4.9 * reading + " mV");
+      //     inString = Serial.readString();
     }
+    Serial.println("@");
+    lcd.setCursor(0, 1);
+    // lcd.print("@fake");
+    //     // Send done processing acknowledgement to rust
   }
 }
+
+// void onReceivedValues()
+// {
+//   const uint8_t stringBufferSize = 50;
+//   String text1 = ssp.readString(stringBufferSize);
+//   ssp.readEot(); // read and expect the end-of-transmission byte. important, don't forget!
+//   lcd.begin(16, 2);
+//   lcd.print(text1);
+//   lcd.setCursor(0, 1);
+//   lcd.print("");
+
+//   //
+//   // Immediately send back all received and interpreted values
+//   //
+//   ssp.writeCommand(COMMAND_ID_SEND); // start command with command id
+//   ssp.writeString("");
+//   ssp.writeEot(); // end command with end-of-transmission byte. important, don't forget!
+// }
+
+// void onError(uint8_t errorNum)
+// {
+//   digitalWrite(LED_BUILTIN, HIGH);
+// }
 
 void startUpWait()
 {
@@ -109,6 +144,18 @@ String removeChar(char *str, char c)
   str[j] = 0; // terminate the string
 
   return String(str); // return the actual size
+}
+
+bool isValidNumber(String str)
+{
+  bool isNum = false;
+  for (byte i = 0; i < str.length(); i++)
+  {
+    isNum = isDigit(str.charAt(i));
+    if (!isNum)
+      return false;
+  }
+  return isNum;
 }
 
 void potTest()

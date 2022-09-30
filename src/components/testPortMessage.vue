@@ -5,9 +5,10 @@ export default {
   setup() {},
   methods: {
     testMessage() {
-      let testMsg = "";
-      console.log("Sending msg to arduino");
-      invoke("send_test_msg", { testMsg: this.textBox });
+      if (this.textBox.length > 0) {
+        console.log("Sending msg to arduino");
+        invoke("send_test_msg", { testMsg: this.textBox });
+      }
     },
     // breakPortConnection() {
     //   let testMsg = "";
