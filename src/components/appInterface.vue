@@ -4,6 +4,7 @@ import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/antd.css";
 import { invoke } from "@tauri-apps/api/tauri";
 // const invoke = window.__TAURI__.invoke
+
 export default {
   name: "appInterface",
   components: {
@@ -175,11 +176,6 @@ export default {
       >
         Save Preset
       </button>
-
-
-
-
-
     </div>
   </div>
 </template>

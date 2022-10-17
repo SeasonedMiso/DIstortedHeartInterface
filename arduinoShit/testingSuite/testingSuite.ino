@@ -15,10 +15,10 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 const byte wiperPin = A5;
 // DS1804 digipot = DS1804( 6, 5, 4, DS1804_FIFTY );
-DS1804 digipot = DS1804(6, 5, 4, DS1804_FIFTY); //2 fiftys connected together for 100hundred
+DS1804 digipot = DS1804(6, 5, 4, DS1804_TEN);
 
 const long BAUDRATE = 9600; // speed of serial connection
-unsigned long reading = 0;
+int reading = 0;
 unsigned long new_resistance = 0;
 String inString;
 
@@ -35,7 +35,7 @@ void setup()
 
   // ssp.init();
   digipot.setToZero();
-  potTest();
+  // potTest();
 
   lcd.begin(16, 2);
   lcd.print("initArd");
@@ -65,23 +65,22 @@ void loop()
       lcd.print(inString);
       lcd.setCursor(0, 1);
       lcd.print("");
-          if(isValidNumber(inString)){
-            new_resistance = inString.toFloat();
-            // if (inString.toInt() > 0 && inString.toInt() < 50)
-            // {
-            //   freq = inString.toInt();
-            // }
-            digipot.setResistance(new_resistance);
-            delay(100); // give DS1804 time to change, and for analogue reading to settle
-            reading = analogRead(wiperPin);
-            String wiperPositionText = "DS1804 Wiper at ";
-            Serial.println(wiperPositionText + digipot.getWiperPosition());
-            String resistanceText = "DS1804 Resistance set to ";
-            Serial.println(resistanceText + digipot.getResistance() + " ohms (requested " + new_resistance + " ohms)");
-            String wiperPinVoltageText = "Wiper pin voltage: ";
-            Serial.println(wiperPinVoltageText + 4.9 * reading + " mV");
-            inString = Serial.readString();
-          }
+      //     if(isValidNumber(inString)){
+      //       new_resistance = inString.toFloat();
+      //     if (inString.toInt() > 0 && inString.toInt() < 50)
+      //     {
+      //       freq = inString.toInt();
+      //     }
+      //     // digipot.setResistance(new_resistance);
+      //     delay(100); // give DS1804 time to change, and for analogue reading to settle
+      //     // reading = analogRead(wiperPin);
+      //     // String wiperPositionText = "DS1804 Wiper at ";
+      //     // Serial.println(wiperPositionText + digipot.getWiperPosition());
+      //     // String resistanceText = "DS1804 Resistance set to ";
+      //     // Serial.println(resistanceText + digipot.getResistance() + " ohms (requested " + new_resistance + " ohms)");
+      //     // String wiperPinVoltageText = "Wiper pin voltage: ";
+      //     // Serial.println(wiperPinVoltageText + 4.9 * reading + " mV");
+      //     inString = Serial.readString();
     }
     Serial.println("@");
     lcd.setCursor(0, 1);

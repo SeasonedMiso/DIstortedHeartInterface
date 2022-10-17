@@ -11,6 +11,7 @@ use tauri::State;
 
 struct ArduinoContext {
     pub port: Mutex<Option<Box<dyn SerialPort>>>,
+    pub is_locked: Mutex<bool>,
 }
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -22,6 +23,7 @@ fn main() {
     tauri::Builder::default()
         .manage(ArduinoContext {
             port: Mutex::new(port),
+            is_locked: Mutex::new(false),
         })
         .invoke_handler(tauri::generate_handler![
             change_preset,
@@ -39,20 +41,29 @@ fn arduino_found(
     // busy_with_operation: bool,
     arduino_context: State<ArduinoContext>,
 ) -> String {
+    let mut mutex_is_locked = arduino_context.is_locked.lock().unwrap();
+    if *mutex_is_locked == false {
+        *mutex_is_locked = true;
+    } else {
+        return "0".to_string();
+    }
     let mut mutex_guard = arduino_context.port.lock().unwrap();
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
         if let Ok(_) = result {
+            *mutex_is_locked = false;
             "1".to_string()
         } else {
             let new_port = find_arduino();
             *mutex_guard = new_port;
+            *mutex_is_locked = false;
             "0".to_string()
         }
     } else {
         let new_port = find_arduino();
         *mutex_guard = new_port;
+        *mutex_is_locked = false;
         "0".to_string()
     }
 }
@@ -61,7 +72,12 @@ fn arduino_found(
 fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
     println!("Save preset: {}", save_info);
     let mut mutex_guard = arduino_context.port.lock().unwrap();
-
+    let mut mutex_is_locked = arduino_context.is_locked.lock().unwrap();
+    if *mutex_is_locked == false {
+        *mutex_is_locked = true;
+    } else {
+        return;
+    }
     let port_option = mutex_guard.as_mut();
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
@@ -70,8 +86,10 @@ fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
             let output = save_info.as_bytes();
             port.write(output).expect("Write failed!");
             if (await_arduino(port)) {
+                *mutex_is_locked = false;
                 println!("Successful port write");
             } else {
+                *mutex_is_locked = false;
                 println!("Write operation failed");
                 //throw error here
             }
@@ -83,6 +101,12 @@ fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
 fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
     if test_msg.len() > 20 {
         println!("Write operation failed");
+        return;
+    }
+    let mut mutex_is_locked = arduino_context.is_locked.lock().unwrap();
+    if *mutex_is_locked == false {
+        *mutex_is_locked = true;
+    } else {
         return;
     }
     println!("Sending message: {}", test_msg);
@@ -97,11 +121,14 @@ fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
             port.write(output).expect("Write failed!");
             if (await_arduino(port)) {
                 println!("Successful port write");
+                *mutex_is_locked = false;
             } else {
                 println!("Write operation failed");
+                *mutex_is_locked = false;
                 //throw error here
             }
         }
+        *mutex_is_locked = false;
     }
 }
 #[tauri::command]
@@ -109,6 +136,12 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
     println!("Preset changed to: {}", preset_no);
     let mut mutex_guard = arduino_context.port.lock().unwrap();
     let port_option = mutex_guard.as_mut();
+    let mut mutex_is_locked = arduino_context.is_locked.lock().unwrap();
+    if *mutex_is_locked == false {
+        *mutex_is_locked = true;
+    } else {
+        return;
+    }
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
         if let Ok(_) = result {
@@ -119,8 +152,10 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
             port.write(output).expect("Write failed!");
             if (await_arduino(port)) {
                 println!("Successful port write");
+                *mutex_is_locked = false;
             } else {
                 println!("Write operation failed");
+                *mutex_is_locked = false;
                 //throw error here
             }
         }
@@ -185,6 +220,7 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
             }
         } else if cfg!(windows) {
             if p.port_name.contains("COM4") {
+                //maybe these needs to just be COM??
                 if let UsbPort(info) = p.port_type {
                     if let Some(product) = info.product {
                         if product.contains("Arduino Uno") {

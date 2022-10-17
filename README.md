@@ -1,8 +1,29 @@
+TODO:
+Document circuit design step
+Test digital pot w/circuit
+Test 2 50k digital pots in series to make 100k pot
+Fix front end polling
+write arduino side code for final version
+
+finalize circuit
+solder circuit to veroboard and test
+
+---
+
+To buy:
+PT2339 if possible
+9v arduino power supply
+9v battery adapter (or just use vin?)
+9v battery
+Male to male wire set
+Cut casing
+Design casing
+
+---
+
 yarn tauri dev
 
-
 theres a small chance of polling getting in the way of receiving ack bit
-
 
 Maybe led output from arduino too?
 
