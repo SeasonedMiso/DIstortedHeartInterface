@@ -2,6 +2,7 @@
 import { reactive, toRefs } from "vue";
 import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/antd.css";
+import Switches from "vue-switches";
 import { invoke } from "@tauri-apps/api/tauri";
 // const invoke = window.__TAURI__.invoke
 
@@ -9,6 +10,7 @@ export default {
   name: "appInterface",
   components: {
     VueSlider,
+    Switches,
   },
   setup() {
     const sliderData = reactive({ value: 0 });
@@ -18,23 +20,34 @@ export default {
     decrementActivePreset() {
       this.activePreset = this.activePreset > 0 ? this.activePreset - 1 : 2;
       this.saveBool = true;
-      invoke("change_preset", { presetNo: (this.activePreset + 1).toString() });
-      //fetch params from arduino
+      invoke("change_preset", {
+        presetNo: (this.activePreset + 1).toString(),
+      }).then((message) => {
+        this.presetTemp = message.split(" ");
+        this.presets[this.activePreset].lpf = this.presetTemp[1];
+        this.presets[this.activePreset].odGain = this.presetTemp[2];
+        this.presets[this.activePreset].volume = this.presetTemp[3];
+      });
     },
     incrementActivePreset() {
-      console.log("abc");
       this.activePreset = this.activePreset > 1 ? 0 : this.activePreset + 1;
       this.saveBool = true;
-      invoke("change_preset", { presetNo: (this.activePreset + 1).toString() });
-      //fetch params from arduino
+      invoke("change_preset", {
+        presetNo: (this.activePreset + 1).toString(),
+      }).then((message) => {
+        this.presetTemp = message.split(" ");
+        this.presets[this.activePreset].lpf = this.presetTemp[1];
+        this.presets[this.activePreset].odGain = this.presetTemp[2];
+        this.presets[this.activePreset].volume = this.presetTemp[3];
+      });
     },
     presetString(activePreset) {
       let stringOutput = "";
       let currentPreset = this.presets[this.activePreset];
       stringOutput += currentPreset.lpf + " ";
-      stringOutput += currentPreset.hpf + " ";
-      stringOutput += currentPreset.gateThreshold + " ";
-      stringOutput += currentPreset.compThreshold + " ";
+      // stringOutput += currentPreset.hpf + " ";
+      // stringOutput += currentPreset.gateThreshold + " ";
+      // stringOutput += currentPreset.compThreshold + " ";
       stringOutput += currentPreset.odGain + " ";
       stringOutput += currentPreset.volume;
       return stringOutput;
@@ -54,36 +67,41 @@ export default {
       console.log("123");
       invoke("save_preset", { saveInfo: saveInfo });
     },
+    toggleDistortion() {
+      this.superDistortion = !this.superDistortion;
+    },
   },
   data() {
     return {
       saveBool: true,
       activePreset: 0,
+      presetTemp: [],
       customColor: {
         backgroundColor: "Red",
       },
+      superDistortion: false,
       presets: [
         {
           lpf: 0,
-          hpf: 0,
-          gateThreshold: 0,
-          compThreshold: 0,
+          // hpf: 0,
+          // gateThreshold: 0,
+          // compThreshold: 0,
           odGain: 0,
           volume: 0,
         },
         {
           lpf: 0,
-          hpf: 0,
-          gateThreshold: 0,
-          compThreshold: 0,
+          // hpf: 0,
+          // gateThreshold: 0,
+          // compThreshold: 0,
           odGain: 0,
           volume: 0,
         },
         {
           lpf: 0,
-          hpf: 0,
-          gateThreshold: 0,
-          compThreshold: 0,
+          // hpf: 0,
+          // gateThreshold: 0,
+          // compThreshold: 0,
           odGain: 0,
           volume: 0,
         },
@@ -113,43 +131,49 @@ export default {
         ▲
       </button>
       <div style="margin: 0 auto; width: 80%">
-        LowPassCutoff:{{ presets[activePreset].lpf * 50 + "hz" }}
+        Tone:{{ presets[activePreset].lpf }}
         <vue-slider
           ref=" slider"
           v-model="presets[activePreset].lpf"
           v-on:change="saveBool = false"
         />
-        HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
+        <!-- HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].hpf"
           v-on:change="saveBool = false"
-        />
-        gateThreshold:{{ presets[activePreset].gateThreshold }}
+        /> -->
+        <!-- gateThreshold:{{ presets[activePreset].gateThreshold }}
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].gateThreshold"
           v-on:change="saveBool = false"
-        />
-        compThreshold:{{ presets[activePreset].compThreshold }}
+        /> -->
+        <!-- compThreshold:{{ presets[activePreset].compThreshold }}
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].compThreshold"
           v-on:change="saveBool = false"
-        />
-        odGain:{{ presets[activePreset].odGain }}
+        /> -->
+        Drive:{{ presets[activePreset].odGain }}
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].odGain"
           v-on:change="saveBool = false"
         />
-        volume:{{ presets[activePreset].volume }}
+        Volume:{{ presets[activePreset].volume }}
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].volume"
           v-on:change="saveBool = false"
         />
       </div>
+      Super Distortion :
+      <label class="switch" style="margin: 5px 0px; margin-left: 46vw">
+        <input type="checkbox" v-model="superDistortion" />
+        <span class="slider round"></span>
+      </label>
+
       <button
         @click="incrementActivePreset()"
         style="margin: 0 auto; margin-bottom: 30px; width: 90%"
@@ -204,7 +228,68 @@ export default {
 .pre1 {
   background-color: rgb(44, 98, 44);
 }
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
 
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
 html,
 body {
   margin: 0px !important;

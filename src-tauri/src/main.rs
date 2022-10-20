@@ -37,10 +37,7 @@ fn main() {
 }
 
 #[tauri::command]
-fn arduino_found(
-    // busy_with_operation: bool,
-    arduino_context: State<ArduinoContext>,
-) -> String {
+fn arduino_found(arduino_context: State<ArduinoContext>) -> String {
     let mut mutex_is_locked = arduino_context.is_locked.lock().unwrap();
     if *mutex_is_locked == false {
         *mutex_is_locked = true;
@@ -85,12 +82,12 @@ fn save_preset(save_info: String, arduino_context: State<ArduinoContext>) {
             sleep(Duration::new(0, 1000));
             let output = save_info.as_bytes();
             port.write(output).expect("Write failed!");
-            if (await_arduino(port)) {
+            if await_arduino(port) == "1".to_string() {
                 *mutex_is_locked = false;
                 println!("Successful port write");
             } else {
                 *mutex_is_locked = false;
-                println!("Write operation failed");
+                println!("---Write operation failed");
                 //throw error here
             }
         }
@@ -119,7 +116,7 @@ fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
             sleep(Duration::new(0, 1000));
             let output = test_msg.as_bytes();
             port.write(output).expect("Write failed!");
-            if (await_arduino(port)) {
+            if await_arduino(port) == "1".to_string() {
                 println!("Successful port write");
                 *mutex_is_locked = false;
             } else {
@@ -132,7 +129,7 @@ fn send_test_msg(test_msg: String, arduino_context: State<ArduinoContext>) {
     }
 }
 #[tauri::command]
-fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
+fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) -> String {
     println!("Preset changed to: {}", preset_no);
     let mut mutex_guard = arduino_context.port.lock().unwrap();
     let port_option = mutex_guard.as_mut();
@@ -140,7 +137,7 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
     if *mutex_is_locked == false {
         *mutex_is_locked = true;
     } else {
-        return;
+        return "0".to_string();
     }
     if let Some(port) = port_option {
         let result = port.write("$".as_bytes());
@@ -150,22 +147,29 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) {
             temp_string.push_str(&preset_no);
             let output = temp_string.as_bytes();
             port.write(output).expect("Write failed!");
-            if (await_arduino(port)) {
+            let result = await_arduino(port);
+            if result != "0".to_string() {
                 println!("Successful port write");
+                //send back the pot positions to the front end
+                println!("{:?}", result);
                 *mutex_is_locked = false;
+                return result;
             } else {
                 println!("Write operation failed");
                 *mutex_is_locked = false;
                 //throw error here
+                return "0".to_string();
             }
         }
     }
+    return "0".to_string();
 }
-fn await_arduino(port: &mut Box<dyn SerialPort>) -> bool {
+fn await_arduino(port: &mut Box<dyn SerialPort>) -> String {
     println!("Awaiting acknowledgement from arduino...");
     // port.flush().unwrap();
     let mut serial_buf: Vec<u8> = vec![0; 32];
     let mut fail_index = 0;
+    let mut result = "".to_string();
     loop {
         // .expect("Found no data!");
         sleep(Duration::new(1, 0));
@@ -174,17 +178,24 @@ fn await_arduino(port: &mut Box<dyn SerialPort>) -> bool {
         let formatted_string = read_string.replace("$", "").replace("\n", "");
         sleep(Duration::new(0, 1000));
         if let Ok(size) = read_result {
-            let lastChar = read_string.chars().nth(size - 3).unwrap();
-            let strLen = size;
-            if lastChar == '@' {
-                println!("Ack got!");
-                return true;
+            println!("{:?}", formatted_string);
+            let last_char = read_string.chars().nth(size - 3).unwrap();
+            //is this always correct???
+            let str_len = size;
+            if last_char == '@' {
+                result = "1".to_string();
+                if formatted_string.contains('q') {
+                    let start_bytes = formatted_string.find("q").unwrap_or(0);
+                    let end_bytes = formatted_string.find("/").unwrap_or(formatted_string.len());
+                    result = formatted_string[start_bytes..end_bytes].to_string();
+                }
+                return result;
             } else {
                 println!("failed due to not reading @ succesfully");
                 println!("result:{:?}", read_result);
                 println!("Received {}", read_string);
                 println!("Formatted to {}", formatted_string);
-                return false;
+                result = "0".to_string();
             }
         } else {
             fail_index += 1;
@@ -194,7 +205,7 @@ fn await_arduino(port: &mut Box<dyn SerialPort>) -> bool {
             println!("Formatted to {}", formatted_string);
         }
         if fail_index > 10 {
-            return false;
+            result = "0".to_string();
         }
     }
 }

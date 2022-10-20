@@ -2,8 +2,8 @@ TODO:
 Document circuit design step
 Test digital pot w/circuit
 Test 2 50k digital pots in series to make 100k pot
-Fix front end polling
-write arduino side code for final version
+
+send pot values from arduino to front end on change preset
 
 finalize circuit
 solder circuit to veroboard and test
@@ -20,6 +20,9 @@ Cut casing
 Design casing
 
 ---
+
+packages used:
+https://github.com/drewjbartlett/vue-switches
 
 yarn tauri dev
 
