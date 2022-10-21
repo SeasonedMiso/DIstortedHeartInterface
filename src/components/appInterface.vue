@@ -38,7 +38,11 @@ export default {
         this.presets[this.activePreset].lpf = this.presetTemp[1];
         this.presets[this.activePreset].odGain = this.presetTemp[2];
         this.presets[this.activePreset].volume = this.presetTemp[3];
-        this.presets[this.activePreset].superDistortion = this.presetTemp[4];
+        if (this.presetTemp[4] == "t") {
+          this.presets[this.activePreset].superDistortion = true;
+        } else {
+          this.presets[this.activePreset].superDistortion = false;
+        }
       });
     },
     incrementActivePreset() {
@@ -51,7 +55,11 @@ export default {
         this.presets[this.activePreset].lpf = this.presetTemp[1];
         this.presets[this.activePreset].odGain = this.presetTemp[2];
         this.presets[this.activePreset].volume = this.presetTemp[3];
-        this.presets[this.activePreset].superDistortion = this.presetTemp[4];
+        if (this.presetTemp[4] == "t") {
+          this.presets[this.activePreset].superDistortion = true;
+        } else {
+          this.presets[this.activePreset].superDistortion = false;
+        }
       });
     },
     presetString(activePreset) {
@@ -64,9 +72,9 @@ export default {
       stringOutput += currentPreset.odGain + " ";
       stringOutput += currentPreset.volume;
       if (!currentPreset.superDistortion) {
-        stringOutput += f;
+        stringOutput += " f";
       } else {
-        stringOutput += t;
+        stringOutput += " t";
       }
       return stringOutput;
     },
@@ -150,7 +158,8 @@ export default {
         ▲
       </button>
       <div style="margin: 0 auto; width: 80%">
-        Tone:{{ presets[activePreset].lpf }}
+        Tone:
+        <!-- {{ presets[activePreset].lpf }} -->
         <vue-slider
           ref=" slider"
           v-model="presets[activePreset].lpf"
@@ -174,13 +183,15 @@ export default {
           v-model="presets[activePreset].compThreshold"
           v-on:change="saveBool = false"
         /> -->
-        Drive:{{ presets[activePreset].odGain }}
+        Drive:
+        <!-- {{ presets[activePreset].odGain }} -->
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].odGain"
           v-on:change="saveBool = false"
         />
-        Volume:{{ presets[activePreset].volume }}
+        Volume:
+        <!-- {{ presets[activePreset].volume }} -->
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].volume"
@@ -192,6 +203,7 @@ export default {
         <input
           type="checkbox"
           v-model="presets[activePreset].superDistortion"
+          v-on:change="saveBool = false"
         />
         <span class="slider round"></span>
       </label>
