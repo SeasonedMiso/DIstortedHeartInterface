@@ -2,8 +2,8 @@
 // #include <LiquidCrystal.h>
 #include <EEPROM.h>
 DS1804 pot1 = DS1804(6, 5, 4, DS1804_FIFTY);
-// DS1804 pot2 = DS1804(6, 5, 4, DS1804_HUNDRED);
-// DS1804 pot3 = DS1804(6, 5, 4, DS1804_HUNDRED);
+DS1804 pot2 = DS1804(9, 8, 7, DS1804_FIFTY);
+DS1804 pot3 = DS1804(12, 11, 10, DS1804_FIFTY);
 const byte wiperPin = A5;
 
 // screen setup
@@ -14,17 +14,27 @@ const byte wiperPin = A5;
 int preset = 1;
 // Current Preset Variables from 0 to 100
 int pot1Val = 0;
+int pot2Val = 0;
+int pot3Val = 0;
+bool superDistortion = false;
+
 
 // EEProm address definitions
 int AddrPre1pot1Val = 0;
-int AddrPre1pot2Val = 1;
-int AddrPre1pot3Val = 2;
-int AddrPre2pot1Val = 3;
+int AddrPre2pot1Val = 1;
+int AddrPre3pot1Val = 2;
+
+int AddrPre1pot2Val = 3;
 int AddrPre2pot2Val = 4;
-int AddrPre2pot3Val = 5;
-int AddrPre3pot1Val = 6;
-int AddrPre3pot2Val = 7;
+int AddrPre3pot2Val = 5;
+
+int AddrPre1pot3Val = 6;
+int AddrPre2pot3Val = 7;
 int AddrPre3pot3Val = 8;
+
+int AddrPre1SDVal = 9;
+int AddrPre2SDVal = 10;
+int AddrPre3SDVal = 11;
 
 // bitValue = ((percentageValue * 255) / 100);
 const long BAUDRATE = 9600; // speed of serial connection
@@ -39,18 +49,14 @@ void setup()
 {
   Serial.begin(9600);
   pot1.unlock();
+  pot2.unlock();
+  pot3.unlock();
   pot1Val = EEPROM.read(AddrPre1pot1Val);
-  // pot2Val = EEPROM.read(AddrPre1pot2Val);
-  // pot3Val = EEPROM.read(AddrPre1pot3Val);
-  //  assign those to the pots.
+  pot2Val = EEPROM.read(AddrPre1pot2Val);
+  pot3Val = EEPROM.read(AddrPre1pot3Val);
+  superDistortion = EEPROM.read(AddrPre1SDVal);
   // ssp.init();
-  pot1.setToZero();
   // potTest();
-  // lcd.begin(16, 2);
-  // lcd.print("initArd");
-  // lcd.setCursor(0, 1);
-  // lcd.print("");
-  // Serial.println("Initialized");
   delay(100);
 }
 
@@ -61,97 +67,129 @@ void loop()
   {
     digitalWrite(LED_BUILTIN, HIGH);
     inString = Serial.readString();
-    // Serial.write("Received Data:\n");
     inString = removeChar(inString.c_str(), '$');
-    // Serial.println(inString);
     if (inString.length() > 0)
     {
       if (inString[0] == 'p' && inString[1] - '0' > 0 && inString[1] - '0' < 4)
       {
         // load values for current preset from eeprom
-        // Serial.write("Changing Preset to :");
         Serial.println(inString[1]);
         preset = inString[1] - '0';
         if (preset == 1)
         {
-
           pot1Val = EEPROM.read(AddrPre1pot1Val);
-          // pot2Val = EEPROM.read(AddrPre1pot2Val);
-          // pot3Val = EEPROM.read(AddrPre1pot3Val);
+          pot2Val = EEPROM.read(AddrPre1pot2Val);
+          pot3Val = EEPROM.read(AddrPre1pot3Val);
+          superDistortion = EEPROM.read(AddrPre1SDVal);
           pot1.setWiperPosition(pot1Val);
-          // pot2.setWiperPosition(pot2Val);
-          // pot3.setWiperPosition(pot3Val);
+          pot2.setWiperPosition(pot2Val);
+          pot3.setWiperPosition(pot3Val);
+          //trigger relay for distortion
           tempValues = "q1 ";
-          tempValues += String(byteToInt(pot1Val));
-          tempValues += " 0 0";
+          tempValues += String(byteToInt(pot1Val)) + " ";
+          tempValues += String(byteToInt(pot2Val)) + " ";
+          tempValues += String(byteToInt(pot3Val)) + " ";
+          if(superDistortion){
+            tempValues += "t";
+          }else{
+            tempValues += "f";            
+          }
           tempValues += "/";
-          // tempValues += pot2Val + " ";
-          // tempValues += pot3Val + " ";
           Serial.println(tempValues);
-          // Serial.write(q1)
         }
         if (preset == 2)
         {
 
           pot1Val = EEPROM.read(AddrPre2pot1Val);
-          // pot2Val = EEPROM.read(AddrPre2pot2Val);
-          // pot3Val = EEPROM.read(AddrPre2pot3Val);
+          pot2Val = EEPROM.read(AddrPre2pot2Val);
+          pot3Val = EEPROM.read(AddrPre2pot3Val);
+          superDistortion = EEPROM.read(AddrPre2SDVal);
           pot1.setWiperPosition(pot1Val);
-          // pot2.setWiperPosition(pot2Val);
-          // pot3.setWiperPosition(pot3Val);
+          pot2.setWiperPosition(pot2Val);
+          pot3.setWiperPosition(pot3Val);
+           //trigger relay for distortion
           tempValues = "q2 ";
-          tempValues += String(byteToInt(pot1Val));
-          tempValues += " 0 0";
+          tempValues += String(byteToInt(pot1Val)) + " ";
+          tempValues += String(byteToInt(pot2Val)) + " ";
+          tempValues += String(byteToInt(pot3Val)) + " ";
+          if(superDistortion){
+            tempValues += "t";
+          }else{
+            tempValues += "f";            
+          }
           tempValues += "/";
-          // tempValues += pot2Val + " ";
-          // tempValues += pot3Val + " ";
           Serial.println(tempValues);
         }
         if (preset == 3)
         {
           pot1Val = EEPROM.read(AddrPre3pot1Val);
-          // pot2Val = EEPROM.read(AddrPre3pot2Val);
-          // pot3Val = EEPROM.read(AddrPre3pot3Val);
+          pot2Val = EEPROM.read(AddrPre3pot2Val);
+          pot3Val = EEPROM.read(AddrPre3pot3Val);
+          superDistortion = EEPROM.read(AddrPre3SDVal);
           pot1.setWiperPosition(pot1Val);
-          // pot2.setWiperPosition(pot2Val);
-          // pot3.setWiperPosition(pot3Val);
+          pot2.setWiperPosition(pot2Val);
+          pot3.setWiperPosition(pot3Val);
+           //trigger relay for distortion
           tempValues = "q3 ";
-          tempValues += String(byteToInt(pot1Val));
-          tempValues += " 0 0";
+          tempValues += String(byteToInt(pot1Val)) + " ";
+          tempValues += String(byteToInt(pot2Val)) + " ";
+          tempValues += String(byteToInt(pot3Val)) + " ";
+          if(superDistortion){
+            tempValues += "t";
+          }else{
+            tempValues += "f";            
+          }
           tempValues += "/";
-          // tempValues += pot2Val + " ";
-          // tempValues += pot3Val + " ";
           Serial.println(tempValues);
         }
       }
-      // u1:13 0 0
-      // lpf,distortion,volume
       if (inString[0] == 'u' && preset == inString[1] - '0')
       {
         // update the pot to the value
-        // Serial.write("Updating pot \n");
-        pot1Val = intToByte((inString.substring(3, inString.indexOf(' ')).toInt()));
-        // implement for other pots
+        String tempString = inString.substring(3);
+        pot1Val = intToByte((tempString.substring(0,inString.indexOf(' ')).toInt()));     
+        tempString = tempString.substring(tempString.indexOf(' ')+1,tempString.length());
+        pot2Val = intToByte((tempString.substring(0, inString.indexOf(' ')).toInt()));
+        tempString = tempString.substring(tempString.indexOf(' ')+1,tempString.length());
+        pot3Val = intToByte((tempString.substring(0, inString.indexOf(' ')).toInt()));
+        tempString = tempString.substring(tempString.indexOf(' ')+1,tempString.length());
+        
+        Serial.println(tempString.charAt(tempString.indexOf(' ')+1));
+        if (tempString == "t"){
+          superDistortion = true;
+          Serial.println("t");          
+        }else{
+          superDistortion=false;
+          Serial.println("f");
+        }
         pot1.setWiperPosition(pot1Val);
+        pot1.setWiperPosition(pot2Val);
+        pot1.setWiperPosition(pot3Val);
+        //trigger relay
       }
       if (inString[0] == 's' && preset == inString[1] - '0')
       {
         // write current vals to eeprom
-        // Serial.write("Saving preset to memory\n");
         if (preset == 1)
         {
           EEPROM.update(AddrPre1pot1Val, pot1Val);
-          pot1.setWiperPosition(pot1Val);
+          EEPROM.update(AddrPre1pot2Val, pot2Val);
+          EEPROM.update(AddrPre1pot3Val, pot3Val);
+          EEPROM.update(AddrPre1SDVal, superDistortion);
         }
         if (preset == 2)
         {
           EEPROM.update(AddrPre2pot1Val, pot1Val);
-          pot1.setWiperPosition(pot1Val);
+          EEPROM.update(AddrPre2pot2Val, pot2Val);
+          EEPROM.update(AddrPre2pot3Val, pot3Val);
+          EEPROM.update(AddrPre2SDVal, superDistortion);
         }
         if (preset == 3)
         {
           EEPROM.update(AddrPre3pot1Val, pot1Val);
-          pot1.setWiperPosition(pot1Val);
+          EEPROM.update(AddrPre3pot2Val, pot2Val);
+          EEPROM.update(AddrPre3pot3Val, pot3Val);
+          EEPROM.update(AddrPre3SDVal, superDistortion);
         }
       }
       Serial.println("@");

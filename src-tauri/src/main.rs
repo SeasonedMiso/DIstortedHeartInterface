@@ -165,7 +165,7 @@ fn change_preset(preset_no: String, arduino_context: State<ArduinoContext>) -> S
     return "0".to_string();
 }
 fn await_arduino(port: &mut Box<dyn SerialPort>) -> String {
-    println!("Awaiting acknowledgement from arduino...");
+    // println!("Awaiting acknowledgement from arduino...");
     // port.flush().unwrap();
     let mut serial_buf: Vec<u8> = vec![0; 32];
     let mut fail_index = 0;
@@ -178,7 +178,6 @@ fn await_arduino(port: &mut Box<dyn SerialPort>) -> String {
         let formatted_string = read_string.replace("$", "").replace("\n", "");
         sleep(Duration::new(0, 1000));
         if let Ok(size) = read_result {
-            println!("{:?}", formatted_string);
             let last_char = read_string.chars().nth(size - 3).unwrap();
             //is this always correct???
             let str_len = size;

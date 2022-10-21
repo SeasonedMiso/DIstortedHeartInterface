@@ -14,6 +14,17 @@ export default {
   },
   setup() {
     const sliderData = reactive({ value: 0 });
+    invoke("change_preset", {
+      presetNo: (1).toString(),
+    }).then((message) => {
+      //message is timing out before it can be used??
+      //why is this broken
+      this.presetTemp = message.split(" ");
+      this.presets[this.activePreset].lpf = this.presetTemp[1];
+      this.presets[this.activePreset].odGain = this.presetTemp[2];
+      this.presets[this.activePreset].volume = this.presetTemp[3];
+      this.presets[this.activePreset].superDistortion = this.presetTemp[4];
+    });
     return toRefs(sliderData);
   },
   methods: {
@@ -27,6 +38,7 @@ export default {
         this.presets[this.activePreset].lpf = this.presetTemp[1];
         this.presets[this.activePreset].odGain = this.presetTemp[2];
         this.presets[this.activePreset].volume = this.presetTemp[3];
+        this.presets[this.activePreset].superDistortion = this.presetTemp[4];
       });
     },
     incrementActivePreset() {
@@ -39,6 +51,7 @@ export default {
         this.presets[this.activePreset].lpf = this.presetTemp[1];
         this.presets[this.activePreset].odGain = this.presetTemp[2];
         this.presets[this.activePreset].volume = this.presetTemp[3];
+        this.presets[this.activePreset].superDistortion = this.presetTemp[4];
       });
     },
     presetString(activePreset) {
@@ -50,6 +63,11 @@ export default {
       // stringOutput += currentPreset.compThreshold + " ";
       stringOutput += currentPreset.odGain + " ";
       stringOutput += currentPreset.volume;
+      if (!currentPreset.superDistortion) {
+        stringOutput += f;
+      } else {
+        stringOutput += t;
+      }
       return stringOutput;
     },
     updatePreset() {
@@ -58,13 +76,11 @@ export default {
         (this.activePreset + 1).toString() +
         ":" +
         this.presetString(this.activePreset);
-      console.log("123");
       invoke("save_preset", { saveInfo: saveInfo });
       this.saveBool = true;
     },
     savePreset() {
       let saveInfo = "s" + (this.activePreset + 1).toString();
-      console.log("123");
       invoke("save_preset", { saveInfo: saveInfo });
     },
     toggleDistortion() {
@@ -88,6 +104,7 @@ export default {
           // compThreshold: 0,
           odGain: 0,
           volume: 0,
+          superDistortion: false,
         },
         {
           lpf: 0,
@@ -96,6 +113,7 @@ export default {
           // compThreshold: 0,
           odGain: 0,
           volume: 0,
+          superDistortion: false,
         },
         {
           lpf: 0,
@@ -104,6 +122,7 @@ export default {
           // compThreshold: 0,
           odGain: 0,
           volume: 0,
+          superDistortion: false,
         },
       ],
     };
@@ -170,7 +189,10 @@ export default {
       </div>
       Super Distortion :
       <label class="switch" style="margin: 5px 0px; margin-left: 46vw">
-        <input type="checkbox" v-model="superDistortion" />
+        <input
+          type="checkbox"
+          v-model="presets[activePreset].superDistortion"
+        />
         <span class="slider round"></span>
       </label>
 
