@@ -2,7 +2,6 @@
 import { reactive, toRefs } from "vue";
 import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/antd.css";
-import Switches from "vue-switches";
 import { invoke } from "@tauri-apps/api/tauri";
 // const invoke = window.__TAURI__.invoke
 
@@ -10,7 +9,6 @@ export default {
   name: "appInterface",
   components: {
     VueSlider,
-    Switches,
   },
   setup() {
     const sliderData = reactive({ value: 0 });

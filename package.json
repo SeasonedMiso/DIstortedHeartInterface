@@ -15,8 +15,7 @@
     "tailwind": "^4.0.0",
     "tailwindcss": "^3.1.8",
     "vue": "^3.2.37",
-    "vue-slider-component": "^4.1.0-beta.2",
-    "vue-switches": "^2.0.1"
+    "vue-slider-component": "^4.1.0-beta.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.0.5",

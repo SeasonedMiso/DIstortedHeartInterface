@@ -8,16 +8,17 @@ unsigned long startTime = 0;
 unsigned long currentTime = 0;
 unsigned long PCCommsTimeout = 5000;
 
-int LED1 = 2;
-int LED2 = 3;
-int LED3 = 4;
-int button = 5;
-int buttonState;
+int LED1 = A0;
+int LED2 = A1;
+int LED3 = A2;
+int buttonIncrement = A3;
+int buttonDecrement = A4;
+int incButtonState = false;
+int decButtonState = false;
 
-DS1804 pot1 = DS1804(6, 5, 4, DS1804_FIFTY);
-DS1804 pot2 = DS1804(9, 8, 7, DS1804_FIFTY);
-DS1804 pot3 = DS1804(12, 11, 10, DS1804_FIFTY);
-const byte wiperPin = A5;
+DS1804 pot1 = DS1804(2, 3, 4, DS1804_FIFTY);
+DS1804 pot2 = DS1804(5, 6, 7, DS1804_FIFTY);
+DS1804 pot3 = DS1804(8, 9, 10, DS1804_FIFTY);
 
 // screen setup
 // const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
@@ -60,7 +61,8 @@ String tempValues;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(button, INPUT);
+  pinMode(buttonIncrement, INPUT);
+  pinMode(buttonDecrement, INPUT);
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
   pinMode(LED3, OUTPUT);
@@ -88,10 +90,10 @@ void loop() {
   }
 
   if (pcMode == false) {
-    int tempButton = digitalRead(button);
-    if (buttonState != tempButton) {
-      buttonState = tempButton;
-      if (buttonState == 1) {
+    int tempButton = digitalRead(buttonIncrement);
+    if (incButtonState != tempButton) {
+      incButtonState = tempButton;
+      if (incButtonState == 1) {
         if (preset < 3) {
           preset = preset + 1;
         } else {
@@ -101,8 +103,31 @@ void loop() {
         digitalWrite(LED1, LOW);
         digitalWrite(LED2, LOW);
         digitalWrite(LED3, LOW);
-        digitalWrite(preset + 1, HIGH);
       }
+    }
+    tempButton = digitalRead(buttonDecrement);
+    if (decButtonState != tempButton) {
+      decButtonState = tempButton;
+      if (decButtonState == 1) {
+        if (preset > 1) {
+          preset = preset - 1;
+        } else {
+          preset = 3;
+        }
+        changePreset(preset);
+        digitalWrite(LED1, LOW);
+        digitalWrite(LED2, LOW);
+        digitalWrite(LED3, LOW);
+      }
+    }
+    if (preset == 1) {
+      digitalWrite(LED1, HIGH);
+    }
+    if (preset == 2) {
+      digitalWrite(LED2, HIGH);
+    }
+    if (preset == 3) {
+      digitalWrite(LED3, HIGH);
     }
   }
   while (Serial.available() > 0) {
@@ -121,7 +146,7 @@ void handleSerialInput() {
   inString = removeChar(inString.c_str(), '$');
   if (inString.length() > 0) {
     if (inString[0] == 'p' && inString[1] - '0' > 0 && inString[1] - '0' < 4) {
-      Serial.println(inString[1]);
+      // Serial.println(inString[1]);
       preset = inString[1] - '0';
       changePreset(preset);
     }
