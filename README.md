@@ -1,23 +1,10 @@
 TODO:
 Document circuit design step
 Test digital pot w/circuit
-Test 2 50k digital pots in series to make 100k pot
 
-send pot values from arduino to front end on change preset
-
-finalize circuit
-solder circuit to veroboard and test
-
----
-
-To buy:
-PT2339 if possible
-9v arduino power supply
-9v battery adapter (or just use vin?)
-9v battery
-Male to male wire set
-Cut casing
-Design casing
+change to 8 bit values and send them to arduino (convert in the js step)
+fix bug with not loading info from arduino for preset 1 (async)
+super distortion slider postition when scaled
 
 ---
 

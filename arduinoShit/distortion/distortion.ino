@@ -1,5 +1,4 @@
 #include <DS1804.h>
-// #include <LiquidCrystal.h>
 #include <EEPROM.h>
 
 
@@ -15,17 +14,15 @@ int buttonIncrement = A3;
 int buttonDecrement = A4;
 int incButtonState = false;
 int decButtonState = false;
+int relay = A5;
 
 DS1804 pot1 = DS1804(2, 3, 4, DS1804_FIFTY);
 DS1804 pot2 = DS1804(5, 6, 7, DS1804_FIFTY);
 DS1804 pot3 = DS1804(8, 9, 10, DS1804_FIFTY);
 
-// screen setup
-// const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
-// LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-
 // Current preset
 int preset = 1;
+
 // Current Preset Variables from 0 to 100
 int pot1Val = 0;
 int pot2Val = 0;
@@ -50,7 +47,6 @@ int AddrPre1SDVal = 9;
 int AddrPre2SDVal = 10;
 int AddrPre3SDVal = 11;
 
-// bitValue = ((percentageValue * 255) / 100);
 const long BAUDRATE = 9600;  // speed of serial connection
 unsigned long reading = 0;
 unsigned long new_resistance = 0;
@@ -66,6 +62,7 @@ void setup() {
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
   pinMode(LED3, OUTPUT);
+  pinMode(relay, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   pot1.unlock();
   pot2.unlock();
@@ -164,14 +161,15 @@ void handleSerialInput() {
       if (tempString == "t") {
         superDistortion = true;
         Serial.println("t");
+        digitalWrite(relay, HIGH);
       } else {
         superDistortion = false;
         Serial.println("f");
+        digitalWrite(relay, LOW);
       }
       pot1.setWiperPosition(pot1Val);
       pot1.setWiperPosition(pot2Val);
       pot1.setWiperPosition(pot3Val);
-      //trigger relay
     }
     if (inString[0] == 's' && preset == inString[1] - '0') {
       // write current vals to eeprom
@@ -207,15 +205,16 @@ void changePreset(int presetLocal) {
     pot1.setWiperPosition(pot1Val);
     pot2.setWiperPosition(pot2Val);
     pot3.setWiperPosition(pot3Val);
-    //trigger relay for distortion
     tempValues = "q1 ";
     tempValues += String(byteToInt(pot1Val)) + " ";
     tempValues += String(byteToInt(pot2Val)) + " ";
     tempValues += String(byteToInt(pot3Val)) + " ";
     if (superDistortion) {
       tempValues += "t";
+      digitalWrite(relay, HIGH);
     } else {
       tempValues += "f";
+      digitalWrite(relay, LOW);   
     }
     tempValues += "/";
     if (pcMode) { Serial.println(tempValues); }
@@ -229,15 +228,16 @@ void changePreset(int presetLocal) {
     pot1.setWiperPosition(pot1Val);
     pot2.setWiperPosition(pot2Val);
     pot3.setWiperPosition(pot3Val);
-    //trigger relay for distortion
     tempValues = "q2 ";
     tempValues += String(byteToInt(pot1Val)) + " ";
     tempValues += String(byteToInt(pot2Val)) + " ";
     tempValues += String(byteToInt(pot3Val)) + " ";
     if (superDistortion) {
       tempValues += "t";
+      digitalWrite(relay, HIGH);
     } else {
       tempValues += "f";
+      digitalWrite(relay, LOW);  
     }
     tempValues += "/";
     if (pcMode) { Serial.println(tempValues); }
@@ -250,21 +250,23 @@ void changePreset(int presetLocal) {
     pot1.setWiperPosition(pot1Val);
     pot2.setWiperPosition(pot2Val);
     pot3.setWiperPosition(pot3Val);
-    //trigger relay for distortion
     tempValues = "q3 ";
     tempValues += String(byteToInt(pot1Val)) + " ";
     tempValues += String(byteToInt(pot2Val)) + " ";
     tempValues += String(byteToInt(pot3Val)) + " ";
     if (superDistortion) {
       tempValues += "t";
+      digitalWrite(relay, HIGH);
     } else {
       tempValues += "f";
+      digitalWrite(relay, LOW);   
     }
     tempValues += "/";
     if (pcMode) { Serial.println(tempValues); }
   }
   // Serial.println("changed preset to: " + String(preset));
 }
+
 
 String removeChar(char *str, char c) {
 
