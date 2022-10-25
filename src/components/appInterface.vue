@@ -3,7 +3,6 @@ import { reactive, toRefs } from "vue";
 import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/antd.css";
 import { invoke } from "@tauri-apps/api/tauri";
-// const invoke = window.__TAURI__.invoke
 
 export default {
   name: "appInterface",
@@ -64,9 +63,6 @@ export default {
       let stringOutput = "";
       let currentPreset = this.presets[this.activePreset];
       stringOutput += currentPreset.lpf + " ";
-      // stringOutput += currentPreset.hpf + " ";
-      // stringOutput += currentPreset.gateThreshold + " ";
-      // stringOutput += currentPreset.compThreshold + " ";
       stringOutput += currentPreset.odGain + " ";
       stringOutput += currentPreset.volume;
       if (!currentPreset.superDistortion) {
@@ -105,27 +101,18 @@ export default {
       presets: [
         {
           lpf: 0,
-          // hpf: 0,
-          // gateThreshold: 0,
-          // compThreshold: 0,
           odGain: 0,
           volume: 0,
           superDistortion: false,
         },
         {
           lpf: 0,
-          // hpf: 0,
-          // gateThreshold: 0,
-          // compThreshold: 0,
           odGain: 0,
           volume: 0,
           superDistortion: false,
         },
         {
           lpf: 0,
-          // hpf: 0,
-          // gateThreshold: 0,
-          // compThreshold: 0,
           odGain: 0,
           volume: 0,
           superDistortion: false,
@@ -157,39 +144,18 @@ export default {
       </button>
       <div style="margin: 0 auto; width: 80%">
         Tone:
-        <!-- {{ presets[activePreset].lpf }} -->
         <vue-slider
           ref=" slider"
           v-model="presets[activePreset].lpf"
           v-on:change="saveBool = false"
         />
-        <!-- HighPassCutoff:{{ 20000 - presets[activePreset].hpf * 100 + "hz" }}
-        <vue-slider
-          ref="slider"
-          v-model="presets[activePreset].hpf"
-          v-on:change="saveBool = false"
-        /> -->
-        <!-- gateThreshold:{{ presets[activePreset].gateThreshold }}
-        <vue-slider
-          ref="slider"
-          v-model="presets[activePreset].gateThreshold"
-          v-on:change="saveBool = false"
-        /> -->
-        <!-- compThreshold:{{ presets[activePreset].compThreshold }}
-        <vue-slider
-          ref="slider"
-          v-model="presets[activePreset].compThreshold"
-          v-on:change="saveBool = false"
-        /> -->
         Drive:
-        <!-- {{ presets[activePreset].odGain }} -->
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].odGain"
           v-on:change="saveBool = false"
         />
         Volume:
-        <!-- {{ presets[activePreset].volume }} -->
         <vue-slider
           ref="slider"
           v-model="presets[activePreset].volume"
@@ -212,9 +178,6 @@ export default {
       >
         ▼
       </button>
-
-      <!-- one button: if anything is changed (preset or value, flip to update preset button)
-    if preset is updated, then chhange to save preset button -->
       <button
         @click="updatePreset()"
         v-if="!saveBool"
@@ -237,13 +200,6 @@ export default {
 </template>
 
 <style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
 
 .vue-slider {
   margin-bottom: 30px;
@@ -275,7 +231,7 @@ export default {
   height: 0;
 }
 
-/* The slider */
+
 .slider {
   position: absolute;
   cursor: pointer;

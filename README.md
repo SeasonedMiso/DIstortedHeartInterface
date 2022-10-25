@@ -5,6 +5,7 @@ Test digital pot w/circuit
 change to 8 bit values and send them to arduino (convert in the js step)
 fix bug with not loading info from arduino for preset 1 (async)
 super distortion slider postition when scaled
+grey out save preset with preset saved on save
 
 ---
 

@@ -10,10 +10,10 @@ unsigned long PCCommsTimeout = 5000;
 int LED1 = A0;
 int LED2 = A1;
 int LED3 = A2;
-int buttonIncrement = A3;
-int buttonDecrement = A4;
-int incButtonState = false;
-int decButtonState = false;
+int buttonIncrement = 12;
+int buttonDecrement = 13;
+int incButtonState;
+int decButtonState;
 int relay = A5;
 
 DS1804 pot1 = DS1804(2, 3, 4, DS1804_FIFTY);
@@ -54,6 +54,7 @@ String inString;
 byte freq;
 unsigned long last = millis();
 String tempValues;
+int i = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -76,10 +77,11 @@ void setup() {
   digitalWrite(LED3, LOW);
   // potTest();
   delay(100);
+  incButtonState=0;
+  decButtonState = 0;
 }
 
 void loop() {
-
   currentTime = millis();
   if ((currentTime - startTime) > 6000) {
     pcMode = false;
@@ -88,25 +90,27 @@ void loop() {
 
   if (pcMode == false) {
     int tempButton = digitalRead(buttonIncrement);
+    // Serial.println(tempButton);
     if (incButtonState != tempButton) {
-      incButtonState = tempButton;
-      if (incButtonState == 1) {
+    delay(100);
         if (preset < 3) {
           preset = preset + 1;
         } else {
           preset = 1;
         }
         changePreset(preset);
+        Serial.println("preset: "+ String(preset));
         digitalWrite(LED1, LOW);
         digitalWrite(LED2, LOW);
         digitalWrite(LED3, LOW);
-      }
+        incButtonState = tempButton;
+        delay(100);
     }
-    tempButton = digitalRead(buttonDecrement);
-    if (decButtonState != tempButton) {
-      decButtonState = tempButton;
-      if (decButtonState == 1) {
-        if (preset > 1) {
+    
+    int tempButton1 = digitalRead(buttonDecrement);
+    if (decButtonState != tempButton1) {
+    delay(100);
+         if (preset > 1) {
           preset = preset - 1;
         } else {
           preset = 3;
@@ -115,7 +119,7 @@ void loop() {
         digitalWrite(LED1, LOW);
         digitalWrite(LED2, LOW);
         digitalWrite(LED3, LOW);
-      }
+        decButtonState = tempButton1;
     }
     if (preset == 1) {
       digitalWrite(LED1, HIGH);
