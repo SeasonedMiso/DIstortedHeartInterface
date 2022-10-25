@@ -233,7 +233,7 @@ fn find_arduino() -> Option<Box<dyn SerialPort>> {
                 //maybe these needs to just be COM??
                 if let UsbPort(info) = p.port_type {
                     if let Some(product) = info.product {
-                        if product.contains("Arduino Uno") {
+                        if product.contains("Arduino") {
                             arduino_port_name = p.port_name
                         }
                     }
