@@ -1,3 +1,6 @@
+Readme:
+Supports windows 10+, mac and linux support not at current but can be implemented.
+
 TODO:
 Document circuit design step
 Test digital pot w/circuit
